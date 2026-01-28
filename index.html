@@ -2075,16 +2075,29 @@
 
         // ============ SWAP DIRECTION ============
         function swapTokenDirection() {
+            // Get current TO amount (this becomes the new FROM amount)
+            const toAmountEl = document.getElementById('toAmount');
+            const newFromAmount = toAmountEl?.value || '0';
+            
             // Swap the tokens
             const temp = fromToken;
             fromToken = toToken;
             toToken = temp;
             
-            // Update UI
+            // Update token UI
             document.getElementById('fromTokenLogo').src = fromToken.logo;
             document.getElementById('fromTokenName').textContent = fromToken.symbol;
             document.getElementById('toTokenLogo').src = toToken.logo;
             document.getElementById('toTokenName').textContent = toToken.symbol;
+            
+            // Swap the amounts - TO amount becomes FROM amount
+            const fromAmountEl = document.getElementById('fromAmount');
+            if (fromAmountEl && parseFloat(newFromAmount) > 0) {
+                fromAmountEl.value = newFromAmount;
+            }
+            
+            // Clear TO amount while we fetch new quotes
+            if (toAmountEl) toAmountEl.value = '0';
             
             // Animate the button
             const btn = document.getElementById('swapDirectionBtn');
@@ -2093,8 +2106,8 @@
                 setTimeout(() => btn.style.transform = '', 300);
             }
             
-            // Refetch quotes
-            const amount = document.getElementById('fromAmount').value;
+            // Refetch quotes with new FROM amount
+            const amount = fromAmountEl?.value;
             if (amount && parseFloat(amount) > 0) {
                 fetchQuotes(amount);
             }

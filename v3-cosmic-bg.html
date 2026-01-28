@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purple Aggregator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #09090b;
+            --bg-secondary: #111113;
+            --bg-card: #18181b;
+            --bg-card-hover: #1f1f23;
+            --bg-input: #0f0f11;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
+            --text-primary: #fafafa;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --text-tertiary: rgba(255, 255, 255, 0.4);
+            --purple-primary: #8b5cf6;
+            --purple-secondary: #a78bfa;
+            --purple-glow: rgba(139, 92, 246, 0.2);
+            --purple-subtle: rgba(139, 92, 246, 0.1);
+            --green: #22c55e;
+            --green-subtle: rgba(34, 197, 94, 0.12);
+            --orange: #f59e0b;
+            --orange-subtle: rgba(245, 158, 11, 0.12);
+            --blue: #3b82f6;
+            --blue-subtle: rgba(59, 130, 246, 0.12);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Cosmic Background */
+        .bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            background: linear-gradient(180deg, 
+                #09090b 0%, 
+                #0d0a14 20%,
+                #12091c 40%,
+                #1a0d2e 60%,
+                #0f0a18 80%,
+                #09090b 100%
+            );
+        }
+
+        /* Gradient orbs */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+        }
+
+        .bg-orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
+            animation: float1 20s ease-in-out infinite;
+        }
+
+        .bg-orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.4) 0%, transparent 70%);
+            bottom: -150px;
+            left: -100px;
+            animation: float2 25s ease-in-out infinite;
+        }
+
+        .bg-orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.3) 0%, transparent 70%);
+            top: 40%;
+            left: 20%;
+            animation: float3 18s ease-in-out infinite;
+        }
+
+        .bg-orb-4 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
+            top: 60%;
+            right: 10%;
+            animation: float1 22s ease-in-out infinite reverse;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-40px, 20px) scale(1.03); }
+            66% { transform: translate(30px, -30px) scale(0.97); }
+        }
+
+        @keyframes float3 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(20px, -20px) scale(1.1); }
+        }
+
+        /* Grid overlay */
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.5) 70%, transparent 100%);
+        }
+
+        /* Stars */
+        .bg-stars {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent),
+                radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 160px 120px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 200px 50px, rgba(255,255,255,0.15), transparent),
+                radial-gradient(1px 1px at 250px 160px, rgba(255,255,255,0.25), transparent),
+                radial-gradient(2px 2px at 300px 90px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 350px 200px, rgba(255,255,255,0.35), transparent),
+                radial-gradient(2px 2px at 400px 130px, rgba(255,255,255,0.15), transparent);
+            background-repeat: repeat;
+            background-size: 450px 250px;
+            animation: twinkle 8s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Bottom glow line */
+        .bg-horizon {
+            position: absolute;
+            bottom: 20%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(139, 92, 246, 0.3) 20%, 
+                rgba(139, 92, 246, 0.5) 50%, 
+                rgba(139, 92, 246, 0.3) 80%, 
+                transparent 100%
+            );
+            box-shadow: 0 0 40px 10px rgba(139, 92, 246, 0.2);
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px 32px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 32px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--purple-primary);
+            border-radius: 8px;
+        }
+
+        .logo-text {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-text span {
+            color: var(--purple-secondary);
+        }
+
+        .nav {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .nav-item {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .gas-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .gas-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .connect-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            background: var(--purple-primary);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .connect-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+        }
+
+        /* Main Layout */
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* Swap Card */
+        .swap-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .swap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .swap-title {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .swap-settings {
+            display: flex;
+            gap: 6px;
+        }
+
+        .settings-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .settings-btn:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+        }
+
+        .settings-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-secondary);
+        }
+
+        /* Token Input */
+        .token-input-wrapper {
+            background: var(--bg-input);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 6px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .token-input-wrapper:focus-within {
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0 0 4px var(--purple-subtle);
+        }
+
+        .token-input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .token-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .token-balance {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .token-balance span {
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+
+        .token-balance span:hover {
+            color: var(--purple-secondary);
+        }
+
+        .token-input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .token-amount-wrapper {
+            flex: 1;
+        }
+
+        .token-amount {
+            width: 100%;
+            font-size: 36px;
+            font-weight: 600;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            outline: none;
+            letter-spacing: -0.02em;
+        }
+
+        .token-amount::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .token-usd {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        .token-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px 8px 8px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid var(--border);
+        }
+
+        .token-selector:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+        }
+
+        .token-icon-wrapper {
+            position: relative;
+        }
+
+        .token-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #627eea, #3b5998);
+        }
+
+        .token-icon.usdt {
+            background: linear-gradient(135deg, #26A17B, #1a7a5c);
+        }
+
+        .verified-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 14px;
+            height: 14px;
+            background: var(--green);
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .verified-badge svg {
+            width: 8px;
+            height: 8px;
+            stroke: white;
+            stroke-width: 3;
+        }
+
+        .token-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .token-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .token-chart {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sparkline {
+            width: 48px;
+            height: 16px;
+        }
+
+        .sparkline path {
+            fill: none;
+            stroke: var(--green);
+            stroke-width: 1.5;
+        }
+
+        .token-change {
+            font-size: 11px;
+            color: var(--green);
+            font-weight: 500;
+        }
+
+        .token-change.negative {
+            color: #ef4444;
+        }
+
+        .token-chevron {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-tertiary);
+        }
+
+        /* Quick Amount Buttons */
+        .quick-amounts {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .quick-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .quick-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border-color: var(--border-hover);
+        }
+
+        .quick-btn.max {
+            color: var(--purple-primary);
+        }
+
+        .quick-btn.max:hover {
+            background: var(--purple-subtle);
+            border-color: var(--purple-primary);
+        }
+
+        /* Swap Divider */
+        .swap-divider {
+            display: flex;
+            justify-content: center;
+            margin: -2px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .swap-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--bg-card);
+            border: 4px solid var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .swap-btn:hover {
+            background: var(--purple-primary);
+            transform: rotate(180deg);
+        }
+
+        .swap-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-secondary);
+        }
+
+        .swap-btn:hover svg {
+            stroke: white;
+        }
+
+        /* Exchange Info */
+        .exchange-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            margin-top: 4px;
+        }
+
+        .exchange-rate {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .exchange-rate svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--text-tertiary);
+        }
+
+        .price-impact {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--green);
+            background: var(--green-subtle);
+            padding: 6px 10px;
+            border-radius: 8px;
+        }
+
+        /* Liquidity Bar */
+        .liquidity-section {
+            margin-top: 4px;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+        }
+
+        .liquidity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .liquidity-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .liquidity-value {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .liquidity-bar {
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .liquidity-fill {
+            height: 100%;
+            width: 78%;
+            background: linear-gradient(90deg, var(--purple-primary), var(--purple-secondary));
+            border-radius: 3px;
+        }
+
+        /* Action Button */
+        .action-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: var(--purple-primary);
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 16px;
+        }
+
+        .action-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--purple-glow);
+        }
+
+        /* Right Panel */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Routes Card */
+        .routes-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .routes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .routes-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .routes-live {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* Route Item */
+        .route-item {
+            background: var(--bg-secondary);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .route-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .route-item:hover {
+            border-color: var(--border-hover);
+        }
+
+        .route-item.best {
+            border-color: var(--purple-primary);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), transparent);
+        }
+
+        .route-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .route-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .route-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        .route-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .route-badge {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--purple-primary);
+            background: var(--purple-subtle);
+            padding: 3px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .route-amount {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .route-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .route-path {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .route-path svg {
+            width: 10px;
+            height: 10px;
+            stroke: var(--text-tertiary);
+        }
+
+        .route-gas {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .route-gas span {
+            color: var(--text-secondary);
+        }
+
+        /* Savings Card */
+        .savings-card {
+            background: linear-gradient(135deg, var(--purple-subtle), rgba(139, 92, 246, 0.05));
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .savings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .savings-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .savings-period {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .savings-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--green);
+            letter-spacing: -0.02em;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .stat-value.green {
+            color: var(--green);
+        }
+
+        /* Gas Selector */
+        .gas-selector {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .gas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .gas-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .gas-price {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .gas-options {
+            display: flex;
+            gap: 6px;
+        }
+
+        .gas-option {
+            flex: 1;
+            padding: 10px 8px;
+            text-align: center;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .gas-option:hover {
+            border-color: var(--border-hover);
+        }
+
+        .gas-option.active {
+            border-color: var(--purple-primary);
+            background: var(--purple-subtle);
+        }
+
+        .gas-option-icon {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 6px;
+        }
+
+        .gas-option-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text-tertiary);
+        }
+
+        .gas-option.active .gas-option-icon svg {
+            stroke: var(--purple-primary);
+        }
+
+        .gas-option:hover .gas-option-icon svg {
+            stroke: var(--text-secondary);
+        }
+
+        .gas-option-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .gas-option.active .gas-option-label {
+            color: var(--text-primary);
+        }
+
+        .gas-option-time {
+            font-size: 10px;
+            color: var(--text-tertiary);
+        }
+
+        .gas-option.active .gas-option-time {
+            color: var(--purple-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Cosmic Background -->
+    <div class="bg-canvas">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+        <div class="bg-orb bg-orb-4"></div>
+        <div class="bg-grid"></div>
+        <div class="bg-stars"></div>
+        <div class="bg-horizon"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <div class="logo-text">Purple <span>Aggregator</span></div>
+                </div>
+                <nav class="nav">
+                    <div class="nav-item active">Swap</div>
+                    <div class="nav-item">Limit</div>
+                    <div class="nav-item">Cross-chain</div>
+                    <div class="nav-item">History</div>
+                </nav>
+            </div>
+            <div class="header-right">
+                <div class="gas-indicator">
+                    <div class="gas-dot"></div>
+                    <span>12 gwei</span>
+                </div>
+                <button class="connect-btn">Connect Wallet</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Swap Card -->
+            <div class="swap-card">
+                <div class="swap-header">
+                    <h1 class="swap-title">Swap</h1>
+                    <div class="swap-settings">
+                        <button class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="1 4 1 10 7 10"></polyline>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                            </svg>
+                        </button>
+                        <button class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- From Token -->
+                <div class="token-input-wrapper">
+                    <div class="token-input-header">
+                        <span class="token-label">From</span>
+                        <span class="token-balance">Balance: <span>13,000.22 ETH</span></span>
+                    </div>
+                    <div class="token-input-row">
+                        <div class="token-amount-wrapper">
+                            <input type="text" class="token-amount" value="1.5233" placeholder="0">
+                            <div class="token-usd">≈ $5,847.99</div>
+                        </div>
+                        <div class="token-selector">
+                            <div class="token-icon-wrapper">
+                                <div class="token-icon"></div>
+                                <div class="verified-badge">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="token-info">
+                                <span class="token-name">ETH</span>
+                                <div class="token-chart">
+                                    <svg class="sparkline" viewBox="0 0 48 16">
+                                        <path d="M0,12 L6,10 L12,14 L18,8 L24,9 L30,4 L36,6 L42,2 L48,4"></path>
+                                    </svg>
+                                    <span class="token-change">+2.4%</span>
+                                </div>
+                            </div>
+                            <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="quick-amounts">
+                        <button class="quick-btn">25%</button>
+                        <button class="quick-btn">50%</button>
+                        <button class="quick-btn">75%</button>
+                        <button class="quick-btn max">MAX</button>
+                    </div>
+                </div>
+
+                <!-- Swap Button -->
+                <div class="swap-divider">
+                    <button class="swap-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- To Token -->
+                <div class="token-input-wrapper">
+                    <div class="token-input-header">
+                        <span class="token-label">To</span>
+                        <span class="token-balance">Balance: <span>0 USDT</span></span>
+                    </div>
+                    <div class="token-input-row">
+                        <div class="token-amount-wrapper">
+                            <input type="text" class="token-amount" value="5,849.52" placeholder="0" readonly>
+                            <div class="token-usd">≈ $5,849.52</div>
+                        </div>
+                        <div class="token-selector">
+                            <div class="token-icon-wrapper">
+                                <div class="token-icon usdt"></div>
+                                <div class="verified-badge">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="token-info">
+                                <span class="token-name">USDT</span>
+                                <div class="token-chart">
+                                    <svg class="sparkline" viewBox="0 0 48 16">
+                                        <path d="M0,8 L6,8 L12,7 L18,9 L24,8 L30,8 L36,7 L42,8 L48,8"></path>
+                                    </svg>
+                                    <span class="token-change">+0.01%</span>
+                                </div>
+                            </div>
+                            <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exchange Info -->
+                <div class="exchange-info">
+                    <div class="exchange-rate">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="17 1 21 5 17 9"></polyline>
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                            <polyline points="7 23 3 19 7 15"></polyline>
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                        </svg>
+                        1 ETH = 3,840.24 USDT
+                    </div>
+                    <div class="price-impact">+$1.53 better</div>
+                </div>
+
+                <!-- Liquidity Indicator -->
+                <div class="liquidity-section">
+                    <div class="liquidity-header">
+                        <span class="liquidity-label">Liquidity Depth</span>
+                        <span class="liquidity-value">$24.5M available</span>
+                    </div>
+                    <div class="liquidity-bar">
+                        <div class="liquidity-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button class="action-btn">Connect Wallet</button>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Savings Card -->
+                <div class="savings-card">
+                    <div class="savings-header">
+                        <span class="savings-label">Your Total Savings</span>
+                        <span class="savings-period">This month</span>
+                    </div>
+                    <div class="savings-value">+$147.52</div>
+                </div>
+
+                <!-- Routes Card -->
+                <div class="routes-card">
+                    <div class="routes-header">
+                        <div class="routes-title">Best Routes</div>
+                        <div class="routes-live">
+                            <div class="live-dot"></div>
+                            Live
+                        </div>
+                    </div>
+
+                    <div class="route-item best">
+                        <div class="route-top">
+                            <div class="route-name">
+                                <div class="route-icon">🟣</div>
+                                <span class="route-label">Purple Route</span>
+                                <span class="route-badge">Best</span>
+                            </div>
+                            <div class="route-amount">5,849.52</div>
+                        </div>
+                        <div class="route-bottom">
+                            <div class="route-path">
+                                ETH
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                1inch
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                USDT
+                            </div>
+                            <div class="route-gas">Gas <span>$1.24</span></div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div class="route-top">
+                            <div class="route-name">
+                                <div class="route-icon">🔵</div>
+                                <span class="route-label">0x Router</span>
+                            </div>
+                            <div class="route-amount">5,847.18</div>
+                        </div>
+                        <div class="route-bottom">
+                            <div class="route-path">
+                                ETH
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                Uniswap
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                USDT
+                            </div>
+                            <div class="route-gas">Gas <span>$1.31</span></div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div class="route-top">
+                            <div class="route-name">
+                                <div class="route-icon">🟢</div>
+                                <span class="route-label">Kyberswap</span>
+                            </div>
+                            <div class="route-amount">5,845.92</div>
+                        </div>
+                        <div class="route-bottom">
+                            <div class="route-path">
+                                ETH
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                WETH
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                USDT
+                            </div>
+                            <div class="route-gas">Gas <span>$1.28</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Slippage</div>
+                        <div class="stat-value">0.5%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Price Impact</div>
+                        <div class="stat-value green">&lt;0.01%</div>
+                    </div>
+                </div>
+
+                <!-- Gas Selector -->
+                <div class="gas-selector">
+                    <div class="gas-header">
+                        <span class="gas-label">Transaction Speed</span>
+                        <span class="gas-price">~$1.24</span>
+                    </div>
+                    <div class="gas-options">
+                        <div class="gas-option">
+                            <div class="gas-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 8 14"></polyline>
+                                </svg>
+                            </div>
+                            <div class="gas-option-label">Slow</div>
+                            <div class="gas-option-time">~5 min</div>
+                        </div>
+                        <div class="gas-option active">
+                            <div class="gas-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                </svg>
+                            </div>
+                            <div class="gas-option-label">Normal</div>
+                            <div class="gas-option-time">~30 sec</div>
+                        </div>
+                        <div class="gas-option">
+                            <div class="gas-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                                    <path d="M5 19l-2 2"></path>
+                                    <path d="M19 5l2-2"></path>
+                                </svg>
+                            </div>
+                            <div class="gas-option-label">Fast</div>
+                            <div class="gas-option-time">~10 sec</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

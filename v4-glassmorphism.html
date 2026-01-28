@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purple Aggregator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #09090b;
+            --bg-secondary: #111113;
+            --bg-card: rgba(24, 24, 27, 0.7);
+            --bg-card-solid: #18181b;
+            --bg-card-hover: rgba(31, 31, 35, 0.8);
+            --bg-input: rgba(15, 15, 17, 0.8);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
+            --text-primary: #fafafa;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --text-tertiary: rgba(255, 255, 255, 0.4);
+            --purple-primary: #8b5cf6;
+            --purple-secondary: #a78bfa;
+            --purple-glow: rgba(139, 92, 246, 0.4);
+            --purple-subtle: rgba(139, 92, 246, 0.1);
+            --green: #22c55e;
+            --green-subtle: rgba(34, 197, 94, 0.12);
+            --orange: #f59e0b;
+            --orange-subtle: rgba(245, 158, 11, 0.12);
+            --blue: #3b82f6;
+            --blue-subtle: rgba(59, 130, 246, 0.12);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Cosmic Background */
+        .bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            background: linear-gradient(180deg, 
+                #09090b 0%, 
+                #0d0a14 20%,
+                #12091c 40%,
+                #1a0d2e 60%,
+                #0f0a18 80%,
+                #09090b 100%
+            );
+        }
+
+        /* Gradient orbs */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+        }
+
+        .bg-orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
+            animation: float1 20s ease-in-out infinite;
+        }
+
+        .bg-orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.4) 0%, transparent 70%);
+            bottom: -150px;
+            left: -100px;
+            animation: float2 25s ease-in-out infinite;
+        }
+
+        .bg-orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.3) 0%, transparent 70%);
+            top: 40%;
+            left: 20%;
+            animation: float3 18s ease-in-out infinite;
+        }
+
+        .bg-orb-4 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
+            top: 60%;
+            right: 10%;
+            animation: float1 22s ease-in-out infinite reverse;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-40px, 20px) scale(1.03); }
+            66% { transform: translate(30px, -30px) scale(0.97); }
+        }
+
+        @keyframes float3 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(20px, -20px) scale(1.1); }
+        }
+
+        /* Floating Particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(139, 92, 246, 0.6);
+            border-radius: 50%;
+            animation: particleFloat linear infinite;
+        }
+
+        .particle:nth-child(1) { left: 10%; animation-duration: 20s; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 20%; animation-duration: 25s; animation-delay: -5s; width: 3px; height: 3px; }
+        .particle:nth-child(3) { left: 30%; animation-duration: 18s; animation-delay: -2s; }
+        .particle:nth-child(4) { left: 40%; animation-duration: 22s; animation-delay: -8s; width: 2px; height: 2px; }
+        .particle:nth-child(5) { left: 50%; animation-duration: 28s; animation-delay: -4s; }
+        .particle:nth-child(6) { left: 60%; animation-duration: 19s; animation-delay: -10s; width: 3px; height: 3px; }
+        .particle:nth-child(7) { left: 70%; animation-duration: 24s; animation-delay: -6s; }
+        .particle:nth-child(8) { left: 80%; animation-duration: 21s; animation-delay: -12s; width: 2px; height: 2px; }
+        .particle:nth-child(9) { left: 90%; animation-duration: 26s; animation-delay: -3s; }
+        .particle:nth-child(10) { left: 15%; animation-duration: 23s; animation-delay: -7s; width: 3px; height: 3px; }
+        .particle:nth-child(11) { left: 35%; animation-duration: 27s; animation-delay: -9s; }
+        .particle:nth-child(12) { left: 55%; animation-duration: 20s; animation-delay: -11s; width: 2px; height: 2px; }
+        .particle:nth-child(13) { left: 75%; animation-duration: 24s; animation-delay: -1s; }
+        .particle:nth-child(14) { left: 85%; animation-duration: 22s; animation-delay: -14s; width: 3px; height: 3px; }
+        .particle:nth-child(15) { left: 5%; animation-duration: 19s; animation-delay: -6s; }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Grid overlay */
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.5) 70%, transparent 100%);
+        }
+
+        /* Stars */
+        .bg-stars {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent),
+                radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 160px 120px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 200px 50px, rgba(255,255,255,0.15), transparent),
+                radial-gradient(1px 1px at 250px 160px, rgba(255,255,255,0.25), transparent),
+                radial-gradient(2px 2px at 300px 90px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 350px 200px, rgba(255,255,255,0.35), transparent),
+                radial-gradient(2px 2px at 400px 130px, rgba(255,255,255,0.15), transparent);
+            background-repeat: repeat;
+            background-size: 450px 250px;
+            animation: twinkle 8s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Bottom glow line */
+        .bg-horizon {
+            position: absolute;
+            bottom: 20%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(139, 92, 246, 0.3) 20%, 
+                rgba(139, 92, 246, 0.5) 50%, 
+                rgba(139, 92, 246, 0.3) 80%, 
+                transparent 100%
+            );
+            box-shadow: 0 0 40px 10px rgba(139, 92, 246, 0.2);
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0 32px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--purple-primary);
+            border-radius: 8px;
+        }
+
+        .logo-text {
+            font-size: 17px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-text span {
+            color: var(--purple-secondary);
+        }
+
+        .nav {
+            display: flex;
+            gap: 4px;
+            background: rgba(17, 17, 19, 0.6);
+            backdrop-filter: blur(20px);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .nav-item {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            color: var(--text-primary);
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .gas-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: rgba(17, 17, 19, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .gas-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .connect-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            background: var(--purple-primary);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .connect-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px var(--purple-glow);
+        }
+
+        /* Main Layout */
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(40px);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), transparent 50%, rgba(139, 92, 246, 0.1));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .glass-card:hover::before {
+            opacity: 1;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 8px 40px rgba(139, 92, 246, 0.15);
+        }
+
+        /* Swap Card */
+        .swap-card {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(40px);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .swap-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), transparent 40%, transparent 60%, rgba(139, 92, 246, 0.2));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .swap-card:hover::before {
+            opacity: 1;
+        }
+
+        .swap-card:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 20px 60px rgba(139, 92, 246, 0.2);
+        }
+
+        .swap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .swap-title {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .swap-settings {
+            display: flex;
+            gap: 6px;
+        }
+
+        .settings-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(17, 17, 19, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .settings-btn:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .settings-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-secondary);
+        }
+
+        .settings-btn:hover svg {
+            stroke: var(--purple-secondary);
+        }
+
+        /* Token Input */
+        .token-input-wrapper {
+            background: rgba(15, 15, 17, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 6px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .token-input-wrapper:focus-within {
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0 0 4px var(--purple-subtle);
+        }
+
+        .token-input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .token-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .token-balance {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .token-balance span {
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+
+        .token-balance span:hover {
+            color: var(--purple-secondary);
+        }
+
+        .token-input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .token-amount-wrapper {
+            flex: 1;
+        }
+
+        .token-amount {
+            width: 100%;
+            font-size: 36px;
+            font-weight: 600;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            outline: none;
+            letter-spacing: -0.02em;
+        }
+
+        .token-amount::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        /* Animated number display */
+        .animated-amount {
+            font-size: 36px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .digit {
+            display: inline-block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .token-usd {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        .token-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px 8px 8px;
+            background: rgba(24, 24, 27, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid var(--border);
+        }
+
+        .token-selector:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: scale(1.02);
+        }
+
+        .token-icon-wrapper {
+            position: relative;
+        }
+
+        .token-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #627eea, #3b5998);
+        }
+
+        .token-icon.usdt {
+            background: linear-gradient(135deg, #26A17B, #1a7a5c);
+        }
+
+        .verified-badge {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 14px;
+            height: 14px;
+            background: var(--green);
+            border-radius: 50%;
+            border: 2px solid var(--bg-card-solid);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .verified-badge svg {
+            width: 8px;
+            height: 8px;
+            stroke: white;
+            stroke-width: 3;
+        }
+
+        .token-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .token-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .token-chart {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sparkline {
+            width: 48px;
+            height: 16px;
+        }
+
+        .sparkline path {
+            fill: none;
+            stroke: var(--green);
+            stroke-width: 1.5;
+        }
+
+        .token-change {
+            font-size: 11px;
+            color: var(--green);
+            font-weight: 500;
+        }
+
+        .token-change.negative {
+            color: #ef4444;
+        }
+
+        .token-chevron {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-tertiary);
+        }
+
+        /* Quick Amount Buttons */
+        .quick-amounts {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .quick-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: rgba(17, 17, 19, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .quick-btn:hover {
+            color: var(--text-primary);
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .quick-btn.max {
+            color: var(--purple-primary);
+        }
+
+        .quick-btn.max:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: var(--purple-primary);
+        }
+
+        /* Swap Divider */
+        .swap-divider {
+            display: flex;
+            justify-content: center;
+            margin: -2px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .swap-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--bg-card-solid);
+            border: 4px solid rgba(24, 24, 27, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .swap-btn:hover {
+            background: var(--purple-primary);
+            transform: rotate(180deg);
+            box-shadow: 0 4px 20px var(--purple-glow);
+        }
+
+        .swap-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-secondary);
+        }
+
+        .swap-btn:hover svg {
+            stroke: white;
+        }
+
+        /* Exchange Info */
+        .exchange-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            margin-top: 4px;
+        }
+
+        .exchange-rate {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .exchange-rate svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--text-tertiary);
+        }
+
+        .price-impact {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--green);
+            background: var(--green-subtle);
+            padding: 6px 10px;
+            border-radius: 8px;
+        }
+
+        /* Liquidity Bar */
+        .liquidity-section {
+            margin-top: 4px;
+            padding: 14px 16px;
+            background: rgba(17, 17, 19, 0.6);
+            border-radius: 12px;
+        }
+
+        .liquidity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .liquidity-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .liquidity-value {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .liquidity-bar {
+            height: 6px;
+            background: var(--bg-input);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .liquidity-fill {
+            height: 100%;
+            width: 78%;
+            background: linear-gradient(90deg, var(--purple-primary), var(--purple-secondary));
+            border-radius: 3px;
+            animation: liquidityPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes liquidityPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Action Button */
+        .action-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: var(--purple-primary);
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .action-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--purple-glow);
+        }
+
+        /* Loading state */
+        .action-btn.loading {
+            pointer-events: none;
+        }
+
+        .action-btn.loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success state */
+        .action-btn.success {
+            background: var(--green);
+        }
+
+        /* Right Panel */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Routes Card */
+        .routes-card {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(40px);
+            border-radius: 24px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .routes-card:hover {
+            border-color: rgba(139, 92, 246, 0.2);
+        }
+
+        .routes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .routes-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .routes-live {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* Route Item */
+        .route-item {
+            background: rgba(17, 17, 19, 0.6);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .route-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .route-item:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .route-item.best {
+            border-color: var(--purple-primary);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));
+        }
+
+        /* Animated route path */
+        .route-item.best::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            animation: routeShine 3s ease-in-out infinite;
+        }
+
+        @keyframes routeShine {
+            0% { left: -50%; }
+            100% { left: 150%; }
+        }
+
+        .route-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .route-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .route-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: rgba(24, 24, 27, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        .route-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .route-badge {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--purple-primary);
+            background: var(--purple-subtle);
+            padding: 3px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .route-amount {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .route-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Animated route path visualization */
+        .route-path {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .route-path-node {
+            padding: 2px 6px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 4px;
+            animation: nodeGlow 2s ease-in-out infinite;
+        }
+
+        .route-path-node:nth-child(3) { animation-delay: 0.3s; }
+        .route-path-node:nth-child(5) { animation-delay: 0.6s; }
+
+        @keyframes nodeGlow {
+            0%, 100% { background: rgba(139, 92, 246, 0.1); }
+            50% { background: rgba(139, 92, 246, 0.25); }
+        }
+
+        .route-path-arrow {
+            color: var(--purple-primary);
+            animation: arrowMove 1s ease-in-out infinite;
+        }
+
+        @keyframes arrowMove {
+            0%, 100% { transform: translateX(0); opacity: 0.5; }
+            50% { transform: translateX(2px); opacity: 1; }
+        }
+
+        .route-gas {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .route-gas span {
+            color: var(--text-secondary);
+        }
+
+        /* Savings Card */
+        .savings-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));
+            backdrop-filter: blur(40px);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .savings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .savings-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .savings-period {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .savings-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--green);
+            letter-spacing: -0.02em;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-card {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(139, 92, 246, 0.2);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .stat-value.green {
+            color: var(--green);
+        }
+
+        /* Gas Selector */
+        .gas-selector {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .gas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .gas-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .gas-price {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .gas-options {
+            display: flex;
+            gap: 6px;
+        }
+
+        .gas-option {
+            flex: 1;
+            padding: 10px 8px;
+            text-align: center;
+            background: rgba(17, 17, 19, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .gas-option:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .gas-option.active {
+            border-color: var(--purple-primary);
+            background: rgba(139, 92, 246, 0.15);
+        }
+
+        .gas-option-icon {
+            width: 20px;
+            height: 20px;
+            margin: 0 auto 6px;
+        }
+
+        .gas-option-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text-tertiary);
+        }
+
+        .gas-option.active .gas-option-icon svg {
+            stroke: var(--purple-primary);
+        }
+
+        .gas-option:hover .gas-option-icon svg {
+            stroke: var(--text-secondary);
+        }
+
+        .gas-option-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .gas-option.active .gas-option-label {
+            color: var(--text-primary);
+        }
+
+        .gas-option-time {
+            font-size: 10px;
+            color: var(--text-tertiary);
+        }
+
+        .gas-option.active .gas-option-time {
+            color: var(--purple-secondary);
+        }
+
+        /* Token Search Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .token-modal {
+            width: 420px;
+            max-height: 600px;
+            background: rgba(24, 24, 27, 0.95);
+            backdrop-filter: blur(40px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active .token-modal {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .modal-search {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(15, 15, 17, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .modal-search:focus {
+            border-color: var(--purple-primary);
+            box-shadow: 0 0 0 3px var(--purple-subtle);
+        }
+
+        .modal-search::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        /* Favorites */
+        .favorites-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .favorites-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 10px;
+        }
+
+        .favorites-grid {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .favorite-token {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: rgba(17, 17, 19, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .favorite-token:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .favorite-token-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #627eea, #3b5998);
+        }
+
+        .favorite-token-icon.sol {
+            background: linear-gradient(135deg, #9945FF, #14F195);
+        }
+
+        .favorite-token-icon.usdc {
+            background: linear-gradient(135deg, #2775CA, #1a5c9e);
+        }
+
+        .favorite-token-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Token List */
+        .token-list {
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .token-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .token-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .token-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .token-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .token-list-item:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .token-list-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .token-list-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #627eea, #3b5998);
+        }
+
+        .token-list-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .token-list-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .token-list-symbol {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .token-list-right {
+            text-align: right;
+        }
+
+        .token-list-balance {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .token-list-value {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Cosmic Background -->
+    <div class="bg-canvas">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+        <div class="bg-orb bg-orb-4"></div>
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        <div class="bg-grid"></div>
+        <div class="bg-stars"></div>
+        <div class="bg-horizon"></div>
+    </div>
+
+    <!-- Token Search Modal -->
+    <div class="modal-overlay" id="tokenModal">
+        <div class="token-modal">
+            <div class="modal-header">
+                <div class="modal-title">Select a token</div>
+                <input type="text" class="modal-search" placeholder="Search by name or paste address">
+            </div>
+            <div class="favorites-section">
+                <div class="favorites-label">Favorites</div>
+                <div class="favorites-grid">
+                    <div class="favorite-token">
+                        <div class="favorite-token-icon"></div>
+                        <span class="favorite-token-name">ETH</span>
+                    </div>
+                    <div class="favorite-token">
+                        <div class="favorite-token-icon sol"></div>
+                        <span class="favorite-token-name">SOL</span>
+                    </div>
+                    <div class="favorite-token">
+                        <div class="favorite-token-icon usdc"></div>
+                        <span class="favorite-token-name">USDC</span>
+                    </div>
+                    <div class="favorite-token">
+                        <div class="favorite-token-icon" style="background: linear-gradient(135deg, #26A17B, #1a7a5c);"></div>
+                        <span class="favorite-token-name">USDT</span>
+                    </div>
+                </div>
+            </div>
+            <div class="token-list">
+                <div class="token-list-item">
+                    <div class="token-list-left">
+                        <div class="token-list-icon"></div>
+                        <div class="token-list-info">
+                            <div class="token-list-name">Ethereum</div>
+                            <div class="token-list-symbol">ETH</div>
+                        </div>
+                    </div>
+                    <div class="token-list-right">
+                        <div class="token-list-balance">13,000.22</div>
+                        <div class="token-list-value">$49,920,844</div>
+                    </div>
+                </div>
+                <div class="token-list-item">
+                    <div class="token-list-left">
+                        <div class="token-list-icon" style="background: linear-gradient(135deg, #26A17B, #1a7a5c);"></div>
+                        <div class="token-list-info">
+                            <div class="token-list-name">Tether USD</div>
+                            <div class="token-list-symbol">USDT</div>
+                        </div>
+                    </div>
+                    <div class="token-list-right">
+                        <div class="token-list-balance">0</div>
+                        <div class="token-list-value">$0</div>
+                    </div>
+                </div>
+                <div class="token-list-item">
+                    <div class="token-list-left">
+                        <div class="token-list-icon" style="background: linear-gradient(135deg, #2775CA, #1a5c9e);"></div>
+                        <div class="token-list-info">
+                            <div class="token-list-name">USD Coin</div>
+                            <div class="token-list-symbol">USDC</div>
+                        </div>
+                    </div>
+                    <div class="token-list-right">
+                        <div class="token-list-balance">50,000</div>
+                        <div class="token-list-value">$50,000</div>
+                    </div>
+                </div>
+                <div class="token-list-item">
+                    <div class="token-list-left">
+                        <div class="token-list-icon" style="background: linear-gradient(135deg, #9945FF, #14F195);"></div>
+                        <div class="token-list-info">
+                            <div class="token-list-name">Solana</div>
+                            <div class="token-list-symbol">SOL</div>
+                        </div>
+                    </div>
+                    <div class="token-list-right">
+                        <div class="token-list-balance">1,250</div>
+                        <div class="token-list-value">$158,487</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <div class="logo-text">Purple <span>Aggregator</span></div>
+                </div>
+                <nav class="nav">
+                    <div class="nav-item active">Swap</div>
+                    <div class="nav-item">Limit</div>
+                    <div class="nav-item">Cross-chain</div>
+                    <div class="nav-item">History</div>
+                </nav>
+            </div>
+            <div class="header-right">
+                <div class="gas-indicator">
+                    <div class="gas-dot"></div>
+                    <span>12 gwei</span>
+                </div>
+                <button class="connect-btn">Connect Wallet</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Swap Card -->
+            <div class="swap-card">
+                <div class="swap-header">
+                    <h1 class="swap-title">Swap</h1>
+                    <div class="swap-settings">
+                        <button class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="1 4 1 10 7 10"></polyline>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                            </svg>
+                        </button>
+                        <button class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- From Token -->
+                <div class="token-input-wrapper">
+                    <div class="token-input-header">
+                        <span class="token-label">From</span>
+                        <span class="token-balance">Balance: <span>13,000.22 ETH</span></span>
+                    </div>
+                    <div class="token-input-row">
+                        <div class="token-amount-wrapper">
+                            <input type="text" class="token-amount" value="1.5233" placeholder="0" id="fromAmount">
+                            <div class="token-usd">≈ $5,847.99</div>
+                        </div>
+                        <div class="token-selector" onclick="openModal()">
+                            <div class="token-icon-wrapper">
+                                <div class="token-icon"></div>
+                                <div class="verified-badge">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="token-info">
+                                <span class="token-name">ETH</span>
+                                <div class="token-chart">
+                                    <svg class="sparkline" viewBox="0 0 48 16">
+                                        <path d="M0,12 L6,10 L12,14 L18,8 L24,9 L30,4 L36,6 L42,2 L48,4"></path>
+                                    </svg>
+                                    <span class="token-change">+2.4%</span>
+                                </div>
+                            </div>
+                            <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="quick-amounts">
+                        <button class="quick-btn" onclick="setAmount(25)">25%</button>
+                        <button class="quick-btn" onclick="setAmount(50)">50%</button>
+                        <button class="quick-btn" onclick="setAmount(75)">75%</button>
+                        <button class="quick-btn max" onclick="setAmount(100)">MAX</button>
+                    </div>
+                </div>
+
+                <!-- Swap Button -->
+                <div class="swap-divider">
+                    <button class="swap-btn" onclick="swapTokens()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- To Token -->
+                <div class="token-input-wrapper">
+                    <div class="token-input-header">
+                        <span class="token-label">To</span>
+                        <span class="token-balance">Balance: <span>0 USDT</span></span>
+                    </div>
+                    <div class="token-input-row">
+                        <div class="token-amount-wrapper">
+                            <div class="animated-amount" id="toAmount">
+                                <span class="digit">5</span><span class="digit">,</span><span class="digit">8</span><span class="digit">4</span><span class="digit">9</span><span class="digit">.</span><span class="digit">5</span><span class="digit">2</span>
+                            </div>
+                            <div class="token-usd">≈ $5,849.52</div>
+                        </div>
+                        <div class="token-selector" onclick="openModal()">
+                            <div class="token-icon-wrapper">
+                                <div class="token-icon usdt"></div>
+                                <div class="verified-badge">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="token-info">
+                                <span class="token-name">USDT</span>
+                                <div class="token-chart">
+                                    <svg class="sparkline" viewBox="0 0 48 16">
+                                        <path d="M0,8 L6,8 L12,7 L18,9 L24,8 L30,8 L36,7 L42,8 L48,8"></path>
+                                    </svg>
+                                    <span class="token-change">+0.01%</span>
+                                </div>
+                            </div>
+                            <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exchange Info -->
+                <div class="exchange-info">
+                    <div class="exchange-rate">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="17 1 21 5 17 9"></polyline>
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                            <polyline points="7 23 3 19 7 15"></polyline>
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                        </svg>
+                        1 ETH = 3,840.24 USDT
+                    </div>
+                    <div class="price-impact">+$1.53 better</div>
+                </div>
+
+                <!-- Liquidity Indicator -->
+                <div class="liquidity-section">
+                    <div class="liquidity-header">
+                        <span class="liquidity-label">Liquidity Depth</span>
+                        <span class="liquidity-value">$24.5M available</span>
+                    </div>
+                    <div class="liquidity-bar">
+                        <div class="liquidity-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button class="action-btn" id="actionBtn" onclick="handleSwap()">Connect Wallet</button>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Savings Card -->
+                <div class="savings-card">
+                    <div class="savings-header">
+                        <span class="savings-label">Your Total Savings</span>
+                        <span class="savings-period">This month</span>
+                    </div>
+                    <div class="savings-value">+$147.52</div>
+                </div>
+
+                <!-- Routes Card -->
+                <div class="routes-card">
+                    <div class="routes-header">
+                        <div class="routes-title">Best Routes</div>
+                        <div class="routes-live">
+                            <div class="live-dot"></div>
+                            Live
+                        </div>
+                    </div>
+
+                    <div class="route-item best">
+                        <div class="route-top">
+                            <div class="route-name">
+                                <div class="route-icon">🟣</div>
+                                <span class="route-label">Purple Route</span>
+                                <span class="route-badge">Best</span>
+                            </div>
+                            <div class="route-amount">5,849.52</div>
+                        </div>
+                        <div class="route-bottom">
+                            <div class="route-path">
+                                <span class="route-path-node">ETH</span>
+                                <span class="route-path-arrow">→</span>
+                                <span class="route-path-node">1inch</span>
+                                <span class="route-path-arrow">→</span>
+                                <span class="route-path-node">USDT</span>
+                            </div>
+                            <div class="route-gas">Gas <span>$1.24</span></div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div class="route-top">
+                            <div class="route-name">
+                                <div class="route-icon">🔵</div>
+                                <span class="route-label">0x Router</span>
+                            </div>
+                            <div class="route-amount">5,847.18</div>
+                        </div>
+                        <div class="route-bottom">
+                            <div class="route-path">
+                                <span class="route-path-node">ETH</span>
+                                <span class="route-path-arrow">→</span>
+                                <span class="route-path-node">Uniswap</span>
+                                <span class="route-path-arrow">→</span>
+                                <span class="route-path-node">USDT</span>
+                            </div>
+                            <div class="route-gas">Gas <span>$1.31</span></div>
+                        </div>
+                    </div>
+
+                    <div class="route-item">
+                        <div class="route-top">
+                            <div class="route-name">
+                                <div class="route-icon">🟢</div>
+                                <span class="route-label">Kyberswap</span>
+                            </div>
+                            <div class="route-amount">5,845.92</div>
+                        </div>
+                        <div class="route-bottom">
+                            <div class="route-path">
+                                <span class="route-path-node">ETH</span>
+                                <span class="route-path-arrow">→</span>
+                                <span class="route-path-node">WETH</span>
+                                <span class="route-path-arrow">→</span>
+                                <span class="route-path-node">USDT</span>
+                            </div>
+                            <div class="route-gas">Gas <span>$1.28</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Slippage</div>
+                        <div class="stat-value">0.5%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Price Impact</div>
+                        <div class="stat-value green">&lt;0.01%</div>
+                    </div>
+                </div>
+
+                <!-- Gas Selector -->
+                <div class="gas-selector">
+                    <div class="gas-header">
+                        <span class="gas-label">Transaction Speed</span>
+                        <span class="gas-price">~$1.24</span>
+                    </div>
+                    <div class="gas-options">
+                        <div class="gas-option" onclick="selectGas(this)">
+                            <div class="gas-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 8 14"></polyline>
+                                </svg>
+                            </div>
+                            <div class="gas-option-label">Slow</div>
+                            <div class="gas-option-time">~5 min</div>
+                        </div>
+                        <div class="gas-option active" onclick="selectGas(this)">
+                            <div class="gas-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                </svg>
+                            </div>
+                            <div class="gas-option-label">Normal</div>
+                            <div class="gas-option-time">~30 sec</div>
+                        </div>
+                        <div class="gas-option" onclick="selectGas(this)">
+                            <div class="gas-option-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                                    <path d="M5 19l-2 2"></path>
+                                    <path d="M19 5l2-2"></path>
+                                </svg>
+                            </div>
+                            <div class="gas-option-label">Fast</div>
+                            <div class="gas-option-time">~10 sec</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Modal functions
+        function openModal() {
+            document.getElementById('tokenModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('tokenModal').classList.remove('active');
+        }
+
+        document.getElementById('tokenModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Gas selector
+        function selectGas(element) {
+            document.querySelectorAll('.gas-option').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // Quick amounts
+        function setAmount(percent) {
+            const balance = 13000.22;
+            const amount = (balance * percent / 100).toFixed(4);
+            document.getElementById('fromAmount').value = amount;
+            updateToAmount(amount);
+        }
+
+        // Animated number update
+        function updateToAmount(fromAmount) {
+            const rate = 3840.24;
+            const toValue = (parseFloat(fromAmount) * rate).toFixed(2);
+            const container = document.getElementById('toAmount');
+            
+            container.innerHTML = '';
+            const formatted = parseFloat(toValue).toLocaleString('en-US', {minimumFractionDigits: 2});
+            
+            formatted.split('').forEach((char, i) => {
+                const span = document.createElement('span');
+                span.className = 'digit';
+                span.textContent = char;
+                span.style.animationDelay = `${i * 0.03}s`;
+                container.appendChild(span);
+            });
+        }
+
+        // Swap tokens animation
+        function swapTokens() {
+            const btn = document.querySelector('.swap-btn');
+            btn.style.transform = 'rotate(180deg)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 300);
+        }
+
+        // Handle swap button states
+        function handleSwap() {
+            const btn = document.getElementById('actionBtn');
+            
+            if (btn.textContent === 'Connect Wallet') {
+                btn.textContent = 'Swap';
+                return;
+            }
+            
+            // Loading state
+            btn.classList.add('loading');
+            btn.textContent = 'Swapping';
+            
+            setTimeout(() => {
+                btn.classList.remove('loading');
+                btn.classList.add('success');
+                btn.textContent = '✓ Success!';
+                
+                setTimeout(() => {
+                    btn.classList.remove('success');
+                    btn.textContent = 'Swap';
+                }, 2000);
+            }, 2000);
+        }
+
+        // Input listener for animated updates
+        document.getElementById('fromAmount').addEventListener('input', function(e) {
+            updateToAmount(e.target.value || 0);
+        });
+    </script>
+</body>
+</html>

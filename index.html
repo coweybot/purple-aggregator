@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purple Aggregator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #09090b;
+            --bg-secondary: #111113;
+            --bg-card: rgba(24, 24, 27, 0.7);
+            --bg-card-solid: #18181b;
+            --bg-card-hover: rgba(31, 31, 35, 0.8);
+            --bg-input: rgba(15, 15, 17, 0.8);
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
+            --text-primary: #fafafa;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --text-tertiary: rgba(255, 255, 255, 0.4);
+            --purple-primary: #8b5cf6;
+            --purple-secondary: #a78bfa;
+            --purple-glow: rgba(139, 92, 246, 0.4);
+            --purple-subtle: rgba(139, 92, 246, 0.1);
+            --green: #22c55e;
+            --green-subtle: rgba(34, 197, 94, 0.12);
+            --orange: #f59e0b;
+            --red: #ef4444;
+        }
+
+        /* Light mode */
+        [data-theme="light"] {
+            --bg-primary: #fafafa;
+            --bg-secondary: #f4f4f5;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-card-solid: #ffffff;
+            --bg-card-hover: rgba(250, 250, 250, 0.95);
+            --bg-input: rgba(244, 244, 245, 0.9);
+            --border: rgba(0, 0, 0, 0.08);
+            --border-hover: rgba(0, 0, 0, 0.15);
+            --text-primary: #09090b;
+            --text-secondary: rgba(0, 0, 0, 0.6);
+            --text-tertiary: rgba(0, 0, 0, 0.4);
+            --purple-subtle: rgba(139, 92, 246, 0.08);
+            --green-subtle: rgba(34, 197, 94, 0.1);
+        }
+
+        [data-theme="light"] .bg-canvas {
+            background: linear-gradient(180deg, 
+                #fafafa 0%, 
+                #f0e6ff 30%,
+                #e8d5ff 50%,
+                #f0e6ff 70%,
+                #fafafa 100%
+            );
+        }
+
+        [data-theme="light"] .bg-orb {
+            opacity: 0.25;
+        }
+
+        [data-theme="light"] .bg-stars {
+            display: none;
+        }
+
+        [data-theme="light"] .particle {
+            background: rgba(139, 92, 246, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            position: relative;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Cosmic Background */
+        .bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            background: linear-gradient(180deg, 
+                #09090b 0%, 
+                #0d0a14 20%,
+                #12091c 40%,
+                #1a0d2e 60%,
+                #0f0a18 80%,
+                #09090b 100%
+            );
+            transition: background 0.3s ease;
+        }
+
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            transition: opacity 0.3s ease;
+        }
+
+        .bg-orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%);
+            top: -200px;
+            right: -100px;
+            animation: float1 20s ease-in-out infinite;
+        }
+
+        .bg-orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.4) 0%, transparent 70%);
+            bottom: -150px;
+            left: -100px;
+            animation: float2 25s ease-in-out infinite;
+        }
+
+        .bg-orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.3) 0%, transparent 70%);
+            top: 40%;
+            left: 20%;
+            animation: float3 18s ease-in-out infinite;
+        }
+
+        @keyframes float1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        @keyframes float2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-40px, 20px) scale(1.03); }
+            66% { transform: translate(30px, -30px) scale(0.97); }
+        }
+
+        @keyframes float3 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(20px, -20px) scale(1.1); }
+        }
+
+        /* Particles */
+        .particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(139, 92, 246, 0.6);
+            border-radius: 50%;
+            animation: particleFloat linear infinite;
+        }
+
+        .particle:nth-child(1) { left: 10%; animation-duration: 20s; }
+        .particle:nth-child(2) { left: 20%; animation-duration: 25s; animation-delay: -5s; width: 3px; height: 3px; }
+        .particle:nth-child(3) { left: 30%; animation-duration: 18s; animation-delay: -2s; }
+        .particle:nth-child(4) { left: 40%; animation-duration: 22s; animation-delay: -8s; width: 2px; height: 2px; }
+        .particle:nth-child(5) { left: 50%; animation-duration: 28s; animation-delay: -4s; }
+        .particle:nth-child(6) { left: 60%; animation-duration: 19s; animation-delay: -10s; width: 3px; height: 3px; }
+        .particle:nth-child(7) { left: 70%; animation-duration: 24s; animation-delay: -6s; }
+        .particle:nth-child(8) { left: 80%; animation-duration: 21s; animation-delay: -12s; width: 2px; height: 2px; }
+        .particle:nth-child(9) { left: 90%; animation-duration: 26s; animation-delay: -3s; }
+        .particle:nth-child(10) { left: 15%; animation-duration: 23s; animation-delay: -7s; }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh); opacity: 0; }
+        }
+
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.5) 30%, rgba(0,0,0,0.5) 70%, transparent 100%);
+        }
+
+        .bg-stars {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.4), transparent),
+                radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 160px 120px, rgba(255,255,255,0.3), transparent);
+            background-repeat: repeat;
+            background-size: 200px 150px;
+            animation: twinkle 8s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Stats Banner */
+        .stats-banner {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            padding: 16px 32px;
+            background: rgba(139, 92, 246, 0.08);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            border-radius: 20px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(20px);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-item-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-item-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .stat-item-icon {
+            width: 16px;
+            height: 16px;
+            stroke: var(--purple-primary);
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0 24px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        /* Animated Logo */
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--purple-primary);
+            border-radius: 12px;
+            animation: logoRotate 8s linear infinite;
+        }
+
+        @keyframes logoRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .logo-inner {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--purple-primary), var(--purple-secondary));
+            border-radius: 6px;
+            animation: logoPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.9); opacity: 0.8; }
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-text span {
+            background: linear-gradient(135deg, var(--purple-primary), var(--purple-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .nav-item {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            color: var(--text-primary);
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover svg {
+            stroke: var(--purple-primary);
+        }
+
+        .sun-icon { display: none; }
+        .moon-icon { display: block; }
+
+        [data-theme="light"] .sun-icon { display: block; }
+        [data-theme="light"] .moon-icon { display: none; }
+
+        .gas-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .gas-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .connect-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--purple-primary), #7c3aed);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Main Layout */
+        .main {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* Swap Card */
+        .swap-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(40px);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .swap-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), transparent 40%, transparent 60%, rgba(139, 92, 246, 0.2));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .swap-card:hover::before {
+            opacity: 1;
+        }
+
+        .swap-card:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 25px 80px rgba(139, 92, 246, 0.2);
+        }
+
+        /* Swap Card Content */
+        .swap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .swap-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .swap-settings {
+            display: flex;
+            gap: 6px;
+        }
+
+        .settings-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .settings-btn:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .settings-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-secondary);
+        }
+
+        /* Security Badge */
+        .security-badges {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: var(--green-subtle);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--green);
+        }
+
+        .security-badge svg {
+            width: 12px;
+            height: 12px;
+            stroke: var(--green);
+        }
+
+        .security-badge.audit {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .security-badge.audit svg {
+            stroke: #3b82f6;
+        }
+
+        /* Token Input */
+        .token-input-wrapper {
+            background: var(--bg-input);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 6px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .token-input-wrapper:focus-within {
+            border-color: rgba(139, 92, 246, 0.4);
+            box-shadow: 0 0 0 4px var(--purple-subtle);
+        }
+
+        .token-input-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .token-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .token-balance {
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .token-balance span {
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .token-balance span:hover {
+            color: var(--purple-secondary);
+        }
+
+        .token-input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .token-amount-wrapper {
+            flex: 1;
+        }
+
+        .token-amount {
+            width: 100%;
+            font-size: 36px;
+            font-weight: 600;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            outline: none;
+            letter-spacing: -0.02em;
+        }
+
+        .token-amount::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .token-usd {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        .token-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px 8px 8px;
+            background: var(--bg-card-solid);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid var(--border);
+        }
+
+        .token-selector:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: scale(1.02);
+        }
+
+        .token-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #627eea, #3b5998);
+        }
+
+        .token-icon.usdt {
+            background: linear-gradient(135deg, #26A17B, #1a7a5c);
+        }
+
+        .token-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .token-chevron {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-tertiary);
+        }
+
+        .quick-amounts {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .quick-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .quick-btn:hover {
+            color: var(--text-primary);
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .quick-btn.max {
+            color: var(--purple-primary);
+        }
+
+        /* Swap Button */
+        .swap-divider {
+            display: flex;
+            justify-content: center;
+            margin: -2px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .swap-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--bg-card-solid);
+            border: 4px solid var(--bg-input);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .swap-btn:hover {
+            background: var(--purple-primary);
+            transform: rotate(180deg);
+            box-shadow: 0 4px 20px var(--purple-glow);
+        }
+
+        .swap-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--text-secondary);
+        }
+
+        .swap-btn:hover svg {
+            stroke: white;
+        }
+
+        /* Exchange Info */
+        .exchange-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .exchange-rate {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .price-impact {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--green);
+            background: var(--green-subtle);
+            padding: 6px 10px;
+            border-radius: 8px;
+        }
+
+        /* Action Button */
+        .action-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--purple-primary), #7c3aed);
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.4);
+        }
+
+        .action-btn.loading {
+            pointer-events: none;
+        }
+
+        .action-btn.success {
+            background: linear-gradient(135deg, var(--green), #16a34a);
+        }
+
+        /* Right Panel */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Routes Card */
+        .routes-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(40px);
+            border-radius: 24px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .routes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .routes-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .routes-live {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .route-item {
+            background: var(--bg-input);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .route-item:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .route-item.best {
+            border-color: var(--purple-primary);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));
+        }
+
+        .route-item.best::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            animation: routeShine 3s ease-in-out infinite;
+        }
+
+        @keyframes routeShine {
+            0% { left: -50%; }
+            100% { left: 150%; }
+        }
+
+        .route-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .route-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .route-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+
+        .route-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .route-badge {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--purple-primary);
+            background: var(--purple-subtle);
+            padding: 3px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .route-amount {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .route-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .route-path {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .route-path-node {
+            padding: 2px 6px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 4px;
+        }
+
+        .route-path-arrow {
+            color: var(--purple-primary);
+        }
+
+        .route-gas {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .route-gas span {
+            color: var(--text-secondary);
+        }
+
+        /* Savings Card */
+        .savings-card {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .savings-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .savings-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .savings-period {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        .savings-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .stat-value.green {
+            color: var(--green);
+        }
+
+        /* Confetti */
+        .confetti-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+        }
+
+        .confetti.active {
+            animation: confettiFall 3s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100%) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* Partner Logos */
+        .partners-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .partners-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .partners-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .partner-logo {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .partner-logo:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background -->
+    <div class="bg-canvas">
+        <div class="bg-orb bg-orb-1"></div>
+        <div class="bg-orb bg-orb-2"></div>
+        <div class="bg-orb bg-orb-3"></div>
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        <div class="bg-grid"></div>
+        <div class="bg-stars"></div>
+    </div>
+
+    <!-- Confetti Container -->
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <div class="container">
+        <!-- Stats Banner -->
+        <div class="stats-banner">
+            <div class="stat-item">
+                <svg class="stat-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                <span class="stat-item-value">$2.4B+</span>
+                <span class="stat-item-label">Total Volume</span>
+            </div>
+            <div class="stat-item">
+                <svg class="stat-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span class="stat-item-value">142K+</span>
+                <span class="stat-item-label">Users</span>
+            </div>
+            <div class="stat-item">
+                <svg class="stat-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                <span class="stat-item-value">1.2M+</span>
+                <span class="stat-item-label">Transactions</span>
+            </div>
+            <div class="stat-item">
+                <svg class="stat-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span class="stat-item-value">99.9%</span>
+                <span class="stat-item-label">Uptime</span>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <div class="logo-ring"></div>
+                        <div class="logo-inner"></div>
+                    </div>
+                    <div class="logo-text">Purple <span>Aggregator</span></div>
+                </div>
+                <nav class="nav">
+                    <div class="nav-item active">Swap</div>
+                    <div class="nav-item">Limit</div>
+                    <div class="nav-item">Cross-chain</div>
+                    <div class="nav-item">History</div>
+                </nav>
+            </div>
+            <div class="header-right">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <button class="connect-btn">Connect Wallet</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Swap Card with 3D Tilt -->
+            <div class="swap-card" id="swapCard">
+                <div class="swap-header">
+                    <h1 class="swap-title">Swap</h1>
+                    <div class="swap-settings">
+                        <button class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="1 4 1 10 7 10"></polyline>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                            </svg>
+                        </button>
+                        <button class="settings-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- From Token -->
+                <div class="token-input-wrapper">
+                    <div class="token-input-header">
+                        <span class="token-label">From</span>
+                        <span class="token-balance">Balance: <span>100.00 WMON</span></span>
+                    </div>
+                    <div class="token-input-row">
+                        <div class="token-amount-wrapper">
+                            <input type="text" class="token-amount" value="1.5233" placeholder="0" id="fromAmount">
+                            <div class="token-usd">≈ $5,847.99</div>
+                        </div>
+                        <div class="token-selector">
+                            <div class="token-icon"></div>
+                            <span class="token-name">ETH</span>
+                            <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="quick-amounts">
+                        <button class="quick-btn">25%</button>
+                        <button class="quick-btn">50%</button>
+                        <button class="quick-btn">75%</button>
+                        <button class="quick-btn max">MAX</button>
+                    </div>
+                </div>
+
+                <!-- Swap Button -->
+                <div class="swap-divider">
+                    <button class="swap-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- To Token -->
+                <div class="token-input-wrapper">
+                    <div class="token-input-header">
+                        <span class="token-label">To</span>
+                        <span class="token-balance">Balance: <span>0 USDC</span></span>
+                    </div>
+                    <div class="token-input-row">
+                        <div class="token-amount-wrapper">
+                            <input type="text" class="token-amount" value="5,849.52" placeholder="0" readonly>
+                            <div class="token-usd">≈ $5,849.52</div>
+                        </div>
+                        <div class="token-selector">
+                            <div class="token-icon usdt"></div>
+                            <span class="token-name">USDT</span>
+                            <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exchange Info -->
+                <div class="exchange-info">
+                    <div class="exchange-rate">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;stroke:var(--text-tertiary)">
+                            <polyline points="17 1 21 5 17 9"></polyline>
+                            <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+                            <polyline points="7 23 3 19 7 15"></polyline>
+                            <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+                        </svg>
+                        1 ETH = 3,840.24 USDT
+                    </div>
+                    <div class="price-impact">+$1.53 better</div>
+                </div>
+
+                <!-- Action Button -->
+                <button class="action-btn" id="actionBtn" onclick="handleSwap()">Connect Wallet</button>
+
+                <!-- Partners -->
+                <div class="partners-section">
+                    <div class="partners-label">Integrated with</div>
+                    <div class="partners-logos">
+                        <div class="partner-logo">🟣 Monad</div>
+                        <div class="partner-logo">⟠ Ethereum</div>
+                        <div class="partner-logo">🦄 Uniswap</div>
+                        <div class="partner-logo">🔷 1inch</div>
+                        <div class="partner-logo">🟢 Jupiter</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <!-- Savings Card -->
+                <div class="savings-card">
+                    <div class="savings-header">
+                        <span class="savings-label">Your Total Savings</span>
+                        <span class="savings-period">This month</span>
+                    </div>
+                    <div class="savings-value">+$147.52</div>
+                </div>
+
+                <!-- Routes Card -->
+                <div class="routes-card">
+                    <div class="routes-header">
+                        <div class="routes-title">Best Routes</div>
+                        <div class="routes-live">
+                            <div class="live-dot"></div>
+                            Live
+                        </div>
+                    </div>
+
+                    <div id="routesList">
+                        <div style="text-align:center;padding:20px;color:var(--text-secondary)">Loading quotes...</div>
+                    </div>
+
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Slippage</div>
+                        <div class="stat-value">0.5%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Price Impact</div>
+                        <div class="stat-value green">&lt;0.01%</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ============ CONFIG ============
+        const API_BASE = 'http://localhost:3001/api';
+        
+        // Monad Mainnet Tokens
+        const TOKENS = {
+            WMON: { address: '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A', symbol: 'WMON', decimals: 18, icon: '🟣' },
+            USDC: { address: '0x754704Bc059F8C67012fEd69BC8A327a5aafb603', symbol: 'USDC', decimals: 6, icon: '💵' },
+            WETH: { address: '0xEE8c0E9f1BFFb4Eb878d8f15f368A02a35481242', symbol: 'WETH', decimals: 18, icon: '💎' },
+            USDT: { address: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D', symbol: 'USDT', decimals: 6, icon: '💲' },
+            WBTC: { address: '0x0555E30da8f98308EdB960aa94C0Db47230d2B9c', symbol: 'WBTC', decimals: 8, icon: '🟠' },
+        };
+        
+        let fromToken = TOKENS.WMON;
+        let toToken = TOKENS.USDC;
+        let lastQuotes = null;
+        let debounceTimer = null;
+
+        // ============ THEME ============
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+
+        // ============ QUOTE FETCHING ============
+        async function fetchQuotes(amount) {
+            if (!amount || parseFloat(amount) <= 0) {
+                clearQuotes();
+                return;
+            }
+            
+            const amountWei = BigInt(Math.floor(parseFloat(amount) * (10 ** fromToken.decimals))).toString();
+            
+            try {
+                showLoading();
+                const response = await fetch(
+                    `${API_BASE}/quote?tokenIn=${fromToken.address}&tokenOut=${toToken.address}&amount=${amountWei}&decimals=${fromToken.decimals}`
+                );
+                const data = await response.json();
+                
+                if (data.success) {
+                    lastQuotes = data;
+                    updateQuoteDisplay(data);
+                } else {
+                    showError('Failed to fetch quotes');
+                }
+            } catch (err) {
+                console.error('Quote error:', err);
+                showError('API unavailable - start backend with: npm start');
+            }
+        }
+
+        function updateQuoteDisplay(data) {
+            const routesList = document.getElementById('routesList');
+            if (!routesList) return;
+            
+            const quotes = data.allQuotes.filter(q => q.success);
+            const best = data.bestQuote;
+            
+            if (quotes.length === 0) {
+                routesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary)">No routes found</div>';
+                return;
+            }
+            
+            // Sort by output amount
+            quotes.sort((a, b) => {
+                const amtA = BigInt(a.quote?.toAmount || '0');
+                const amtB = BigInt(b.quote?.toAmount || '0');
+                return amtB > amtA ? 1 : -1;
+            });
+            
+            const icons = { 'OpenOcean': '🌊', 'KyberSwap': '💎', 'Mace': '🟣', '0x': '⚫' };
+            
+            routesList.innerHTML = quotes.map((q, i) => {
+                const amount = formatAmount(q.quote.toAmount, toToken.decimals);
+                const isBest = i === 0;
+                const icon = icons[q.aggregator] || '🔵';
+                
+                return `
+                    <div class="route-item ${isBest ? 'best' : ''}">
+                        <div class="route-top">
+                            <div class="route-name">
+                                <div class="route-icon">${icon}</div>
+                                <span class="route-label">${q.aggregator}</span>
+                                ${isBest ? '<span style="color:var(--green);font-size:11px;margin-left:8px">✓ BEST</span>' : ''}
+                            </div>
+                            <div class="route-amount">${amount}</div>
+                        </div>
+                        <div class="route-bottom">
+                            <div class="route-path">
+                                <span class="route-path-node">${fromToken.symbol}</span>
+                                <span class="route-path-arrow">→</span>
+                                <span class="route-path-node">${q.aggregator}</span>
+                                <span class="route-path-arrow">→</span>
+                                <span class="route-path-node">${toToken.symbol}</span>
+                            </div>
+                            <div class="route-gas">${q.responseTime}ms</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update output amount with best quote
+            if (best) {
+                const outAmount = formatAmount(best.quote.toAmount, toToken.decimals);
+                document.querySelector('.token-input-wrapper:last-of-type .token-amount').value = outAmount;
+            }
+            
+            hideLoading();
+        }
+
+        function formatAmount(wei, decimals) {
+            const num = Number(BigInt(wei)) / (10 ** decimals);
+            return num.toLocaleString('en-US', { maximumFractionDigits: 6 });
+        }
+
+        function clearQuotes() {
+            const routesList = document.getElementById('routesList');
+            if (routesList) {
+                routesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary)">Enter an amount to see quotes</div>';
+            }
+        }
+
+        function showLoading() {
+            const routesList = document.getElementById('routesList');
+            if (routesList) {
+                routesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary)">🔄 Fetching quotes...</div>';
+            }
+        }
+
+        function showError(msg) {
+            const routesList = document.getElementById('routesList');
+            if (routesList) {
+                routesList.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red)">${msg}</div>`;
+            }
+        }
+
+        function hideLoading() {}
+
+        // ============ INPUT HANDLING ============
+        function onAmountChange(e) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                fetchQuotes(e.target.value);
+            }, 500);
+        }
+
+        // ============ CONFETTI ============
+        function createConfetti() {
+            const container = document.getElementById('confettiContainer');
+            if (!container) return;
+            const colors = ['#8b5cf6', '#a78bfa', '#22c55e', '#f59e0b', '#3b82f6', '#ec4899'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                confetti.style.animationDuration = Math.random() * 2 + 2 + 's';
+                container.appendChild(confetti);
+                
+                setTimeout(() => confetti.classList.add('active'), 10);
+                setTimeout(() => confetti.remove(), 4000);
+            }
+        }
+
+        // ============ SWAP ACTION ============
+        function handleSwap() {
+            const btn = document.getElementById('actionBtn');
+            
+            if (btn.textContent === 'Connect Wallet') {
+                btn.textContent = 'Swap';
+                return;
+            }
+            
+            btn.classList.add('loading');
+            btn.textContent = 'Swapping...';
+            
+            setTimeout(() => {
+                btn.classList.remove('loading');
+                btn.classList.add('success');
+                btn.textContent = '✓ Success!';
+                createConfetti();
+                
+                setTimeout(() => {
+                    btn.classList.remove('success');
+                    btn.textContent = 'Swap';
+                }, 3000);
+            }, 2000);
+        }
+
+        // ============ INIT ============
+        document.addEventListener('DOMContentLoaded', () => {
+            const amountInput = document.getElementById('fromAmount');
+            if (amountInput) {
+                amountInput.addEventListener('input', onAmountChange);
+                // Set default value for demo
+                amountInput.value = '1';
+                fetchQuotes('1');
+            }
+            
+            // Update token labels for Monad
+            const tokenNames = document.querySelectorAll('.token-name');
+            if (tokenNames.length >= 2) {
+                tokenNames[0].textContent = fromToken.symbol;
+                tokenNames[1].textContent = toToken.symbol;
+            }
+        });
+    </script>
+</body>
+</html>

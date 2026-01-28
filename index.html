@@ -444,6 +444,11 @@
             box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
         }
 
+        .connect-btn.connected {
+            background: var(--purple-subtle);
+            border-color: var(--purple-primary);
+        }
+
         .connect-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 25px rgba(139, 92, 246, 0.4);
@@ -1190,7 +1195,7 @@
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                     </svg>
                 </button>
-                <button class="connect-btn">Connect Wallet</button>
+                <button class="connect-btn" onclick="connectWallet()">Connect Wallet</button>
             </div>
         </header>
 
@@ -1361,6 +1366,203 @@
         let toToken = TOKENS.USDC;
         let lastQuotes = null;
         let debounceTimer = null;
+        
+        // Monad Chain Config
+        const MONAD_CHAIN = {
+            chainId: '0x8F', // 143 in hex
+            chainName: 'Monad',
+            nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
+            rpcUrls: ['https://rpc.monad.xyz'],
+            blockExplorerUrls: ['https://explorer.monad.xyz']
+        };
+
+        // ============ WALLET STATE ============
+        let walletAddress = null;
+        let walletBalances = {};
+
+        // ============ WALLET FUNCTIONS ============
+        async function connectWallet() {
+            if (!window.ethereum) {
+                alert('Please install MetaMask or another Web3 wallet!');
+                return null;
+            }
+
+            try {
+                // Request account access
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                walletAddress = accounts[0];
+                
+                // Switch to Monad network
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: MONAD_CHAIN.chainId }]
+                    });
+                } catch (switchError) {
+                    // Chain not added, add it
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [MONAD_CHAIN]
+                        });
+                    } else {
+                        throw switchError;
+                    }
+                }
+
+                // Update UI
+                updateWalletUI();
+                await fetchBalances();
+                
+                return walletAddress;
+            } catch (error) {
+                console.error('Wallet connection failed:', error);
+                alert('Failed to connect wallet: ' + error.message);
+                return null;
+            }
+        }
+
+        async function fetchBalances() {
+            if (!walletAddress) return;
+            
+            try {
+                // Fetch MON balance (native)
+                const monBalance = await window.ethereum.request({
+                    method: 'eth_getBalance',
+                    params: [walletAddress, 'latest']
+                });
+                walletBalances.MON = BigInt(monBalance);
+
+                // Fetch WMON balance
+                walletBalances.WMON = await getTokenBalance(TOKENS.WMON.address);
+                
+                // Fetch USDC balance
+                walletBalances.USDC = await getTokenBalance(TOKENS.USDC.address);
+                
+                updateBalanceDisplay();
+            } catch (error) {
+                console.error('Failed to fetch balances:', error);
+            }
+        }
+
+        async function getTokenBalance(tokenAddress) {
+            const data = '0x70a08231000000000000000000000000' + walletAddress.slice(2).toLowerCase();
+            try {
+                const result = await window.ethereum.request({
+                    method: 'eth_call',
+                    params: [{ to: tokenAddress, data }, 'latest']
+                });
+                return BigInt(result);
+            } catch {
+                return 0n;
+            }
+        }
+
+        function updateWalletUI() {
+            const connectBtns = document.querySelectorAll('.connect-btn');
+            const actionBtn = document.getElementById('actionBtn');
+            const shortAddr = walletAddress ? `${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}` : '';
+            
+            connectBtns.forEach(btn => {
+                btn.textContent = shortAddr;
+                btn.classList.add('connected');
+            });
+            
+            if (actionBtn && walletAddress) {
+                actionBtn.textContent = 'Swap';
+            }
+        }
+
+        function updateBalanceDisplay() {
+            // Update FROM balance
+            const fromBalanceEl = document.querySelector('.token-input-wrapper:first-of-type .token-balance span');
+            if (fromBalanceEl && walletBalances.WMON !== undefined) {
+                const bal = Number(walletBalances.WMON) / 1e18;
+                fromBalanceEl.textContent = bal.toFixed(4) + ' WMON';
+            }
+            
+            // Update TO balance
+            const toBalanceEl = document.querySelector('.token-input-wrapper:last-of-type .token-balance span');
+            if (toBalanceEl && walletBalances.USDC !== undefined) {
+                const bal = Number(walletBalances.USDC) / 1e6;
+                toBalanceEl.textContent = bal.toFixed(2) + ' USDC';
+            }
+        }
+
+        async function checkAllowance(tokenAddress, spenderAddress, amount) {
+            const data = '0xdd62ed3e' + 
+                walletAddress.slice(2).toLowerCase().padStart(64, '0') + 
+                spenderAddress.slice(2).toLowerCase().padStart(64, '0');
+            
+            const result = await window.ethereum.request({
+                method: 'eth_call',
+                params: [{ to: tokenAddress, data }, 'latest']
+            });
+            
+            return BigInt(result) >= BigInt(amount);
+        }
+
+        async function approveToken(tokenAddress, spenderAddress, amount) {
+            const data = '0x095ea7b3' + 
+                spenderAddress.slice(2).toLowerCase().padStart(64, '0') + 
+                BigInt(amount).toString(16).padStart(64, '0');
+            
+            const txHash = await window.ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                    from: walletAddress,
+                    to: tokenAddress,
+                    data: data,
+                    gas: '0x15F90' // 90000
+                }]
+            });
+            
+            // Wait for confirmation
+            await waitForTransaction(txHash);
+            return txHash;
+        }
+
+        async function waitForTransaction(txHash) {
+            while (true) {
+                const receipt = await window.ethereum.request({
+                    method: 'eth_getTransactionReceipt',
+                    params: [txHash]
+                });
+                if (receipt) return receipt;
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
+
+        async function executeSwap() {
+            if (!lastQuotes || !lastQuotes.bestQuote) {
+                alert('No quote available');
+                return;
+            }
+
+            const best = lastQuotes.bestQuote;
+            const quote = best.quote;
+            
+            // For now, show the swap details and link to the aggregator
+            // Full execution requires router contract integration
+            const aggregator = best.aggregator;
+            let swapUrl = '';
+            
+            if (aggregator === 'OpenOcean') {
+                swapUrl = `https://app.openocean.finance/MONAD/${fromToken.symbol}/${toToken.symbol}`;
+            } else if (aggregator === 'KyberSwap') {
+                swapUrl = `https://kyberswap.com/swap/monad/${fromToken.address}-to-${toToken.address}`;
+            } else if (aggregator === 'Mace') {
+                swapUrl = `https://mace.ag`;
+            }
+
+            // Show confirmation modal
+            const inputAmount = document.getElementById('fromAmount').value;
+            const outputAmount = formatAmount(quote.toAmount, toToken.decimals);
+            
+            if (confirm(`Swap ${inputAmount} ${fromToken.symbol} for ~${outputAmount} ${toToken.symbol} via ${aggregator}?\n\nThis will open ${aggregator} to complete the swap.`)) {
+                window.open(swapUrl, '_blank');
+            }
+        }
 
         // ============ THEME ============
         function toggleTheme() {
@@ -1527,28 +1729,39 @@
         }
 
         // ============ SWAP ACTION ============
-        function handleSwap() {
+        async function handleSwap() {
             const btn = document.getElementById('actionBtn');
             
-            if (btn.textContent === 'Connect Wallet') {
-                btn.textContent = 'Swap';
+            // Connect wallet if not connected
+            if (!walletAddress) {
+                btn.classList.add('loading');
+                btn.textContent = 'Connecting...';
+                
+                const addr = await connectWallet();
+                
+                btn.classList.remove('loading');
+                if (addr) {
+                    btn.textContent = 'Swap';
+                } else {
+                    btn.textContent = 'Connect Wallet';
+                }
                 return;
             }
             
+            // Execute swap
             btn.classList.add('loading');
-            btn.textContent = 'Swapping...';
+            btn.textContent = 'Preparing...';
             
-            setTimeout(() => {
+            try {
+                await executeSwap();
                 btn.classList.remove('loading');
-                btn.classList.add('success');
-                btn.textContent = '✓ Success!';
-                createConfetti();
-                
-                setTimeout(() => {
-                    btn.classList.remove('success');
-                    btn.textContent = 'Swap';
-                }, 3000);
-            }, 2000);
+                btn.textContent = 'Swap';
+            } catch (error) {
+                console.error('Swap failed:', error);
+                btn.classList.remove('loading');
+                btn.textContent = 'Swap';
+                alert('Swap failed: ' + error.message);
+            }
         }
 
         // ============ INIT ============
@@ -1566,6 +1779,38 @@
             if (tokenNames.length >= 2) {
                 tokenNames[0].textContent = fromToken.symbol;
                 tokenNames[1].textContent = toToken.symbol;
+            }
+
+            // Wallet event listeners
+            if (window.ethereum) {
+                window.ethereum.on('accountsChanged', (accounts) => {
+                    if (accounts.length === 0) {
+                        walletAddress = null;
+                        walletBalances = {};
+                        document.querySelectorAll('.connect-btn').forEach(btn => {
+                            btn.textContent = 'Connect Wallet';
+                            btn.classList.remove('connected');
+                        });
+                        document.getElementById('actionBtn').textContent = 'Connect Wallet';
+                    } else {
+                        walletAddress = accounts[0];
+                        updateWalletUI();
+                        fetchBalances();
+                    }
+                });
+
+                window.ethereum.on('chainChanged', () => {
+                    window.location.reload();
+                });
+
+                // Check if already connected
+                window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
+                    if (accounts.length > 0) {
+                        walletAddress = accounts[0];
+                        updateWalletUI();
+                        fetchBalances();
+                    }
+                });
             }
         });
     </script>

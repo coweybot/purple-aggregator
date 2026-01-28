@@ -1331,7 +1331,7 @@
                             <polyline points="7 23 3 19 7 15"></polyline>
                             <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
                         </svg>
-                        1 WMON = ~21.66 USDC
+                        1 MON ≈ 21.66 USDC
                     </div>
                     <div class="price-impact">+$1.53 better</div>
                 </div>
@@ -1428,6 +1428,8 @@
         const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api';
         
         // Monad Mainnet Tokens with logos
+        const WMON_ADDRESS = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
+        
         const TOKENS = {
             MON: { 
                 address: 'native', 
@@ -1638,8 +1640,8 @@
                 });
                 walletBalances.MON = BigInt(monBalance);
 
-                // Fetch WMON balance
-                walletBalances.WMON = await getTokenBalance(TOKENS.WMON.address);
+                // Fetch WMON balance (same as MON wrapped)
+                walletBalances.WMON = await getTokenBalance(WMON_ADDRESS);
                 
                 // Fetch USDC balance
                 walletBalances.USDC = await getTokenBalance(TOKENS.USDC.address);
@@ -1934,8 +1936,8 @@
             const amountWei = BigInt(Math.floor(parseFloat(amount) * (10 ** fromToken.decimals))).toString();
             
             // For MON (native), use WMON address for API calls
-            const tokenInAddress = fromToken.address === 'native' ? TOKENS.WMON.address : fromToken.address;
-            const tokenOutAddress = toToken.address === 'native' ? TOKENS.WMON.address : toToken.address;
+            const tokenInAddress = fromToken.address === 'native' ? WMON_ADDRESS : fromToken.address;
+            const tokenOutAddress = toToken.address === 'native' ? WMON_ADDRESS : toToken.address;
             
             try {
                 showLoading();

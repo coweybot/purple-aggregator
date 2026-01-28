@@ -2401,12 +2401,16 @@
                     const worstQuote = quotes[quotes.length - 1];
                     const bestAmount = Number(BigInt(best.quote.toAmount));
                     const worstAmount = Number(BigInt(worstQuote.quote.toAmount));
-                    const savings = ((bestAmount - worstAmount) / worstAmount * 100).toFixed(2);
                     const savingsUsd = ((bestAmount - worstAmount) / (10 ** toToken.decimals)).toFixed(2);
-                    savingsDisplay.textContent = savings > 0 ? `+$${savingsUsd} better` : 'Best rate';
+                    // Only show savings if meaningful (> $0.01)
+                    if (parseFloat(savingsUsd) > 0.01) {
+                        savingsDisplay.textContent = `+$${savingsUsd} better`;
+                    } else {
+                        savingsDisplay.textContent = 'Best route available';
+                    }
                     savingsDisplay.style.color = 'var(--green)';
                 } else if (savingsDisplay) {
-                    savingsDisplay.textContent = 'Best available';
+                    savingsDisplay.textContent = 'Best route available';
                     savingsDisplay.style.color = 'var(--green)';
                 }
                 

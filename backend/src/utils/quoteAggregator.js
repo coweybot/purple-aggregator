@@ -27,14 +27,29 @@ function withTimeout(promise, ms, name) {
   ]);
 }
 
+// Simple in-memory cache (5 second TTL)
+const quoteCache = new Map();
+const CACHE_TTL = 5000;
+
+function getCacheKey(params) {
+  return `${params.tokenIn}-${params.tokenOut}-${params.amount}`;
+}
+
 /**
  * Get quotes from all active aggregators in parallel
  */
 export async function getAllQuotes(params) {
   const { tokenIn, tokenOut, amount, slippage, userAddress } = params;
   
-  // Timeout per adapter (5 seconds max)
-  const ADAPTER_TIMEOUT = 5000;
+  // Check cache first
+  const cacheKey = getCacheKey(params);
+  const cached = quoteCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.quotes;
+  }
+  
+  // Timeout per adapter (2.5 seconds max for speed)
+  const ADAPTER_TIMEOUT = 2500;
   
   const quotePromises = adapters.map(async (adapter) => {
     const startTime = Date.now();
@@ -69,7 +84,18 @@ export async function getAllQuotes(params) {
   });
 
   const results = await Promise.allSettled(quotePromises);
-  return results.map(r => r.status === 'fulfilled' ? r.value : { success: false, error: 'Promise rejected' });
+  const quotes = results.map(r => r.status === 'fulfilled' ? r.value : { success: false, error: 'Promise rejected' });
+  
+  // Cache results
+  quoteCache.set(cacheKey, { quotes, timestamp: Date.now() });
+  
+  // Clean old cache entries (max 100)
+  if (quoteCache.size > 100) {
+    const oldest = [...quoteCache.entries()].sort((a, b) => a[1].timestamp - b[1].timestamp)[0];
+    quoteCache.delete(oldest[0]);
+  }
+  
+  return quotes;
 }
 
 /**

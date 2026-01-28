@@ -15,9 +15,9 @@ export default class MaceAdapter {
 
   async getQuote({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress }) {
     try {
-      // Use exchange-amount for quotes (doesn't require wallet simulation)
+      // Use exchange-rate for quotes (doesn't require wallet simulation)
       const response = await axios.post(
-        `${this.baseUrl}/exchange-amount`,
+        `${this.baseUrl}/exchange-rate`,
         {
           inToken: tokenIn,
           outToken: tokenOut,
@@ -36,24 +36,23 @@ export default class MaceAdapter {
       }
 
       // Calculate output based on average exchange rate
-      // The API returns rate stats, we multiply by input amount
       const inputAmount = BigInt(amount);
       const avgRate = data.average; // This is a float ratio
       
-      // Get token decimals to calculate properly
-      const estimatedOutput = this.calculateOutput(inputAmount, avgRate, 18, 6); // WMON 18 decimals, USDC 6
+      // Get token decimals to calculate properly (WMON 18 decimals -> USDC 6 decimals)
+      const estimatedOutput = this.calculateOutput(inputAmount, avgRate, 18, 6);
 
       return {
         toAmount: estimatedOutput.toString(),
         toAmountMin: this.calculateMinOutput(estimatedOutput.toString(), slippage),
         route: {
-          type: data.routeType,
-          source: 'Mace Exchange Rate',
+          type: data.routeType || 'direct',
+          source: 'Mace',
           intermediaries: data.equivilantTokens || []
         },
-        estimatedGas: '150000', // Estimate for Mace swaps
-        priceImpact: data.sumRatio ? ((1 - data.sumRatio / data.average) * 100).toFixed(2) : '0',
-        calldata: null, // Will be populated for actual swaps
+        estimatedGas: '150000',
+        priceImpact: '0',
+        calldata: null,
         to: null,
         value: '0'
       };

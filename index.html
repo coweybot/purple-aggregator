@@ -2162,7 +2162,7 @@
                 // Mace fallback format: direct swap
                 steps.push({
                     name: route.source || quote.aggregator,
-                    details: 'Direct swap'
+                    details: quote.aggregator === 'Mace' ? 'Connect wallet for detailed route' : 'Direct swap'
                 });
             }
             

@@ -1263,7 +1263,7 @@
                     </div>
                     <div class="token-input-row">
                         <div class="token-amount-wrapper">
-                            <input type="text" class="token-amount" value="5,849.52" placeholder="0" readonly>
+                            <input type="text" class="token-amount" id="toAmount" value="5,849.52" placeholder="0" readonly>
                             <div class="token-usd">≈ $5,849.52</div>
                         </div>
                         <div class="token-selector">
@@ -1459,7 +1459,8 @@
             // Update output amount with best quote
             if (best) {
                 const outAmount = formatAmount(best.quote.toAmount, toToken.decimals);
-                document.querySelector('.token-input-wrapper:last-of-type .token-amount').value = outAmount;
+                const toAmountInput = document.getElementById('toAmount');
+                if (toAmountInput) toAmountInput.value = outAmount;
             }
             
             hideLoading();

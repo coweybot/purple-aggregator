@@ -1502,6 +1502,7 @@
         // Monad Mainnet Tokens with logos
         const WMON_ADDRESS = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
         
+        // All addresses verified via Mace API (https://api.mace.ag/swaps/supported-assets)
         const TOKENS = {
             MON: { 
                 address: 'native', 
@@ -1511,36 +1512,43 @@
                 color: '#836EF9'
             },
             USDC: { 
-                address: '0x754704Bc059F8C67012fEd69BC8A327a5aafb603', 
+                address: '0x754704Bc059F8C67012fEd69BC8A327a5aafb603', // Verified ✓
                 symbol: 'USDC', 
                 decimals: 6, 
                 logo: 'https://assets.coingecko.com/coins/images/6319/small/usdc.png',
                 color: '#2775CA'
             },
+            AUSD: { 
+                address: '0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a', // Verified ✓
+                symbol: 'AUSD', 
+                decimals: 6, 
+                logo: 'https://token-logos.mace.ag/mainnet/0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a.svg',
+                color: '#4A90D9'
+            },
             USDT: { 
-                address: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D', 
+                address: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D', // Verified ✓ (USDT0)
                 symbol: 'USDT', 
                 decimals: 6, 
                 logo: 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
                 color: '#26A17B'
             },
             WETH: { 
-                address: '0xEE8c0E9f1BFFb4Eb878d8f15f368A02a35481242', 
+                address: '0xEE8c0E9f1BFFb4Eb878d8f15f368A02a35481242', // Verified ✓
                 symbol: 'WETH', 
                 decimals: 18, 
                 logo: 'https://assets.coingecko.com/coins/images/2518/small/weth.png',
                 color: '#627EEA'
             },
             WBTC: { 
-                address: '0x0555E30da8f98308EdB960aa94C0Db47230d2B9c', 
+                address: '0x0555E30da8f98308EdB960aa94C0Db47230d2B9c', // Verified ✓
                 symbol: 'WBTC', 
                 decimals: 8, 
                 logo: 'https://assets.coingecko.com/coins/images/7598/small/wrapped_bitcoin_wbtc.png',
                 color: '#F7931A'
             },
-            WSOL: { 
-                address: '0x5f0E4D95f5e5f5f5e5f5e5f5e5f5e5f5e5f5e5f5', 
-                symbol: 'WSOL', 
+            SOL: { 
+                address: '0xea17E5a9efEBf1477dB45082d67010E2245217f1', // Verified ✓
+                symbol: 'SOL', 
                 decimals: 9, 
                 logo: 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
                 color: '#14F195'

@@ -1208,6 +1208,200 @@
         .partner-logo:hover {
             opacity: 1;
         }
+
+        /* ============ MOBILE RESPONSIVE ============ */
+        @media (max-width: 1024px) {
+            .main-layout {
+                flex-direction: column;
+                gap: 20px;
+                padding: 0 16px;
+            }
+            
+            .left-panel {
+                max-width: 100%;
+                width: 100%;
+            }
+            
+            .right-panel {
+                max-width: 100%;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            
+            .nav-tabs {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .header-actions {
+                gap: 8px;
+            }
+            
+            .theme-toggle {
+                display: none;
+            }
+            
+            .connect-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+            
+            .stats-bar {
+                padding: 10px 16px;
+                gap: 16px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .stat-item {
+                font-size: 12px;
+            }
+            
+            .main-layout {
+                padding: 0 12px;
+                padding-bottom: 100px;
+            }
+            
+            .swap-card {
+                padding: 20px 16px;
+            }
+            
+            .swap-header h2 {
+                font-size: 18px;
+            }
+            
+            .token-input-group {
+                padding: 16px;
+            }
+            
+            .amount-input {
+                font-size: 28px;
+            }
+            
+            .token-selector {
+                padding: 8px 12px;
+                gap: 8px;
+            }
+            
+            .token-selector img {
+                width: 24px;
+                height: 24px;
+            }
+            
+            .token-selector span {
+                font-size: 14px;
+            }
+            
+            .quick-amounts {
+                gap: 6px;
+            }
+            
+            .quick-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            
+            .swap-btn {
+                padding: 16px;
+                font-size: 15px;
+            }
+            
+            .savings-card {
+                padding: 20px 16px;
+            }
+            
+            .savings-amount {
+                font-size: 28px;
+            }
+            
+            .routes-card {
+                padding: 16px;
+            }
+            
+            .route-item {
+                padding: 14px;
+            }
+            
+            .route-amount {
+                font-size: 15px;
+            }
+            
+            .integrations {
+                padding: 16px;
+            }
+            
+            .integration-logos {
+                gap: 20px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .brand {
+                gap: 8px;
+            }
+            
+            .brand-icon {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .brand-name {
+                font-size: 16px;
+            }
+            
+            .brand-name span {
+                display: none;
+            }
+            
+            .nav-tabs {
+                gap: 4px;
+            }
+            
+            .nav-tab {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            
+            .stats-bar {
+                display: none;
+            }
+            
+            .amount-input {
+                font-size: 24px;
+            }
+            
+            .token-selector {
+                padding: 6px 10px;
+            }
+            
+            .quick-amounts {
+                flex-wrap: wrap;
+            }
+            
+            .route-path {
+                font-size: 10px;
+                flex-wrap: wrap;
+            }
+            
+            .stats-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .stat-box {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>

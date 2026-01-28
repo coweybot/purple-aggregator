@@ -1773,6 +1773,8 @@
         let toToken = TOKENS.USDC;
         let lastQuotes = null;
         let debounceTimer = null;
+        let autoRefreshInterval = null;
+        const AUTO_REFRESH_MS = 5000; // Refresh quotes every 5 seconds
         
         // Monad Chain Config
         const MONAD_CHAIN = {
@@ -2533,8 +2535,26 @@
         const savedTheme = localStorage.getItem('theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
 
+        // ============ AUTO-REFRESH QUOTES ============
+        function startAutoRefresh() {
+            stopAutoRefresh(); // Clear any existing interval
+            autoRefreshInterval = setInterval(() => {
+                const amount = document.getElementById('fromAmount')?.value;
+                if (amount && parseFloat(amount) > 0) {
+                    fetchQuotes(amount, true); // true = silent refresh (no loading indicator)
+                }
+            }, AUTO_REFRESH_MS);
+        }
+        
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
         // ============ QUOTE FETCHING ============
-        async function fetchQuotes(amount) {
+        async function fetchQuotes(amount, silent = false) {
             if (!amount || parseFloat(amount) <= 0) {
                 clearQuotes();
                 return;
@@ -2547,7 +2567,7 @@
             const tokenOutAddress = toToken.address === 'native' ? WMON_ADDRESS : toToken.address;
             
             try {
-                showLoading();
+                if (!silent) showLoading();
                 
                 // Add timeout for faster failure (reduced to 4s for speed)
                 const controller = new AbortController();
@@ -2565,6 +2585,7 @@
                     lastQuotes = data;
                     updateQuoteDisplay(data);
                     updateStats(data);
+                    if (!silent) startAutoRefresh(); // Start auto-refresh after initial fetch
                 } else {
                     showError('Failed to fetch quotes');
                 }
@@ -2745,6 +2766,7 @@
         }
 
         function clearQuotes() {
+            stopAutoRefresh(); // Stop auto-refresh when quotes are cleared
             const routesList = document.getElementById('routesList');
             if (routesList) {
                 routesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary)">Enter an amount to see quotes</div>';

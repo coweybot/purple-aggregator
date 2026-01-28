@@ -638,6 +638,13 @@
             color: var(--text-primary);
             outline: none;
             letter-spacing: -0.02em;
+            cursor: text;
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+        }
+        
+        .token-amount:focus {
+            caret-color: var(--purple-primary);
         }
 
         .token-amount::placeholder {
@@ -1229,7 +1236,7 @@
                     </div>
                     <div class="token-input-row">
                         <div class="token-amount-wrapper">
-                            <input type="number" class="token-amount" value="1" placeholder="0" id="fromAmount" step="any" min="0">
+                            <input type="text" inputmode="decimal" class="token-amount" value="1" placeholder="0" id="fromAmount" autocomplete="off">
                             <div class="token-usd">≈ $5,847.99</div>
                         </div>
                         <div class="token-selector">

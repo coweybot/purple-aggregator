@@ -1541,7 +1541,7 @@
             const wallets = getAvailableWallets();
             
             if (wallets.length === 0) {
-                alert('No wallet detected! Please install MetaMask, Phantom, or Backpack.');
+                showWalletPrompt();
                 return;
             }
             
@@ -1628,7 +1628,7 @@
                 return walletAddress;
             } catch (error) {
                 console.error('Wallet connection failed:', error);
-                alert('Failed to connect wallet: ' + error.message);
+                showToast('Failed to connect: ' + error.message, 'error');
                 return null;
             }
         }
@@ -1747,7 +1747,7 @@
 
         async function executeSwap() {
             if (!lastQuotes || !lastQuotes.bestQuote) {
-                alert('No quote available');
+                showToast('No quote available. Try a different amount.', 'error');
                 return;
             }
 
@@ -1785,6 +1785,139 @@
                 
                 window.open(swapUrl, '_blank');
             }
+        }
+
+        // ============ CUSTOM TOAST/MODAL ============
+        function showToast(message, type = 'info', duration = 4000) {
+            // Remove existing toast
+            const existing = document.getElementById('customToast');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.id = 'customToast';
+            
+            const icons = {
+                info: '💡',
+                error: '❌',
+                success: '✅',
+                wallet: '🔗'
+            };
+            
+            const colors = {
+                info: 'var(--purple-primary)',
+                error: '#ef4444',
+                success: '#22c55e',
+                wallet: 'var(--purple-primary)'
+            };
+            
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%) translateY(-100px);
+                background: var(--bg-card-solid);
+                border: 1px solid ${colors[type]};
+                border-radius: 16px;
+                padding: 16px 24px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                z-index: 10000;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px ${colors[type]}33;
+                backdrop-filter: blur(10px);
+                animation: toastIn 0.3s ease forwards;
+                max-width: 90vw;
+            `;
+            
+            toast.innerHTML = `
+                <span style="font-size:24px">${icons[type]}</span>
+                <span style="color:var(--text-primary);font-size:14px">${message}</span>
+                <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;margin-left:8px">✕</button>
+            `;
+            
+            // Add animation keyframes if not exists
+            if (!document.getElementById('toastStyles')) {
+                const style = document.createElement('style');
+                style.id = 'toastStyles';
+                style.textContent = `
+                    @keyframes toastIn {
+                        to { transform: translateX(-50%) translateY(0); }
+                    }
+                    @keyframes toastOut {
+                        to { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            
+            // Auto dismiss
+            if (duration > 0) {
+                setTimeout(() => {
+                    toast.style.animation = 'toastOut 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            }
+        }
+
+        function showWalletPrompt() {
+            const modal = document.createElement('div');
+            modal.id = 'walletPromptModal';
+            modal.style.cssText = `
+                position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
+                display: flex; align-items: center; justify-content: center; z-index: 9999;
+                backdrop-filter: blur(4px);
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: var(--bg-card-solid);
+                border-radius: 24px;
+                padding: 32px;
+                max-width: 400px;
+                width: 90%;
+                border: 1px solid var(--border);
+                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+                text-align: center;
+            `;
+            
+            content.innerHTML = `
+                <div style="width:64px;height:64px;margin:0 auto 20px;background:linear-gradient(135deg,var(--purple-primary),var(--purple-secondary));border-radius:50%;display:flex;align-items:center;justify-content:center">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/>
+                        <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>
+                    </svg>
+                </div>
+                <h3 style="color:var(--text-primary);margin:0 0 12px;font-size:20px">Wallet Required</h3>
+                <p style="color:var(--text-secondary);margin:0 0 24px;font-size:14px;line-height:1.6">
+                    To swap tokens, you'll need a Web3 wallet. Install one of these:
+                </p>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+                    <a href="https://metamask.io/download/" target="_blank" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-input);border-radius:12px;text-decoration:none;color:var(--text-primary);border:1px solid var(--border);transition:all 0.15s">
+                        <span style="font-size:24px">🦊</span>
+                        <span style="font-weight:500">MetaMask</span>
+                        <span style="margin-left:auto;color:var(--text-tertiary);font-size:12px">Popular</span>
+                    </a>
+                    <a href="https://phantom.app/download" target="_blank" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-input);border-radius:12px;text-decoration:none;color:var(--text-primary);border:1px solid var(--border);transition:all 0.15s">
+                        <span style="font-size:24px">👻</span>
+                        <span style="font-weight:500">Phantom</span>
+                        <span style="margin-left:auto;color:var(--text-tertiary);font-size:12px">Multi-chain</span>
+                    </a>
+                    <a href="https://www.backpack.app/download" target="_blank" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-input);border-radius:12px;text-decoration:none;color:var(--text-primary);border:1px solid var(--border);transition:all 0.15s">
+                        <span style="font-size:24px">🎒</span>
+                        <span style="font-weight:500">Backpack</span>
+                        <span style="margin-left:auto;color:var(--text-tertiary);font-size:12px">xNFT</span>
+                    </a>
+                </div>
+                <button onclick="document.getElementById('walletPromptModal').remove()" style="width:100%;padding:14px;background:var(--purple-primary);border:none;border-radius:12px;color:white;font-size:15px;font-weight:600;cursor:pointer">
+                    Got it
+                </button>
+            `;
+            
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            modal.appendChild(content);
+            document.body.appendChild(modal);
         }
 
         // ============ TOKEN SELECTOR ============
@@ -2321,7 +2454,7 @@
                 console.error('Swap failed:', error);
                 btn.classList.remove('loading');
                 btn.textContent = 'Swap';
-                alert('Swap failed: ' + error.message);
+                showToast('Swap failed: ' + error.message, 'error');
             }
         }
 

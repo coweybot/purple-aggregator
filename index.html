@@ -1211,15 +1211,13 @@
 
         /* ============ MOBILE RESPONSIVE ============ */
         @media (max-width: 1024px) {
-            .main-layout {
-                flex-direction: column;
+            .main {
+                grid-template-columns: 1fr;
                 gap: 20px;
-                padding: 0 16px;
             }
             
-            .left-panel {
-                max-width: 100%;
-                width: 100%;
+            .container {
+                padding: 12px 16px;
             }
             
             .right-panel {

@@ -2402,10 +2402,11 @@
                     const bestAmount = Number(BigInt(best.quote.toAmount));
                     const worstAmount = Number(BigInt(worstQuote.quote.toAmount));
                     const savingsUsd = ((bestAmount - worstAmount) / (10 ** toToken.decimals)).toFixed(2);
-                    savingsDisplay.textContent = `+$${savingsUsd} better`;
+                    // Show savings if meaningful (> $0.01), otherwise "Best route available"
+                    savingsDisplay.textContent = parseFloat(savingsUsd) > 0.01 ? `+$${savingsUsd} better` : 'Best route available';
                     savingsDisplay.style.color = 'var(--green)';
                 } else if (savingsDisplay) {
-                    savingsDisplay.textContent = 'Best rate';
+                    savingsDisplay.textContent = 'Best route available';
                     savingsDisplay.style.color = 'var(--green)';
                 }
                 

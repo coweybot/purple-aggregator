@@ -1174,8 +1174,8 @@
                     <div class="logo-text">Purple <span>Aggregator</span></div>
                 </div>
                 <nav class="nav">
-                    <div class="nav-item active">Swap</div>
-                    <div class="nav-item">History</div>
+                    <div class="nav-item active" onclick="showTab('swap')">Swap</div>
+                    <div class="nav-item" onclick="showTab('history')">History</div>
                 </nav>
             </div>
             <div class="header-right">
@@ -1202,7 +1202,7 @@
         <!-- Main Content -->
         <main class="main">
             <!-- Swap Card with 3D Tilt -->
-            <div class="swap-card" id="swapCard">
+            <div class="swap-card" id="swapCard" data-panel="swap">
                 <div class="swap-header">
                     <h1 class="swap-title">Swap</h1>
                     <div class="swap-settings">
@@ -1229,7 +1229,7 @@
                     </div>
                     <div class="token-input-row">
                         <div class="token-amount-wrapper">
-                            <input type="text" class="token-amount" value="1.5233" placeholder="0" id="fromAmount">
+                            <input type="number" class="token-amount" value="1" placeholder="0" id="fromAmount" step="any" min="0">
                             <div class="token-usd">≈ $5,847.99</div>
                         </div>
                         <div class="token-selector">
@@ -1298,7 +1298,38 @@
 
                 <!-- Partners -->
                 <div class="partners-section">
-                    <div class="partners-label">Aggregators</div>
+                    <div class="partners-label">Integrations</div>
+                    <div class="partners-logos">
+                        <div class="partner-logo"><img src="https://openocean.finance/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> OpenOcean</div>
+                        <div class="partner-logo"><img src="https://kyberswap.com/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> KyberSwap</div>
+                        <div class="partner-logo">🟣 Mace</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Panel (hidden by default) -->
+            <div class="swap-card" id="historyPanel" style="display: none;">
+                <div class="swap-header">
+                    <h1 class="swap-title">Transaction History</h1>
+                </div>
+                
+                <div id="historyContent" style="padding: 16px 0;">
+                    <div id="historyList">
+                        <!-- Transactions will be loaded here -->
+                    </div>
+                    
+                    <div id="noHistory" style="text-align:center;padding:40px 20px;color:var(--text-secondary)">
+                        <svg style="width:48px;height:48px;margin-bottom:16px;opacity:0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <p style="margin:0 0 8px;font-size:16px;color:var(--text-primary)">No transactions yet</p>
+                        <p style="margin:0;font-size:14px">Your swap history will appear here</p>
+                    </div>
+                </div>
+                
+                <!-- Partners -->
+                <div class="partners-section">
+                    <div class="partners-label">Integrations</div>
                     <div class="partners-logos">
                         <div class="partner-logo"><img src="https://openocean.finance/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> OpenOcean</div>
                         <div class="partner-logo"><img src="https://kyberswap.com/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> KyberSwap</div>
@@ -1379,29 +1410,122 @@
         // ============ WALLET STATE ============
         let walletAddress = null;
         let walletBalances = {};
+        let selectedProvider = null;
+
+        // ============ WALLET DETECTION ============
+        function getAvailableWallets() {
+            const wallets = [];
+            
+            // MetaMask
+            if (window.ethereum?.isMetaMask) {
+                wallets.push({ name: 'MetaMask', icon: '🦊', provider: window.ethereum });
+            }
+            
+            // Phantom EVM
+            if (window.phantom?.ethereum) {
+                wallets.push({ name: 'Phantom', icon: '👻', provider: window.phantom.ethereum });
+            }
+            
+            // Backpack
+            if (window.backpack?.ethereum) {
+                wallets.push({ name: 'Backpack', icon: '🎒', provider: window.backpack.ethereum });
+            }
+            
+            // Coinbase Wallet
+            if (window.coinbaseWalletExtension) {
+                wallets.push({ name: 'Coinbase', icon: '🔵', provider: window.coinbaseWalletExtension });
+            }
+            
+            // Trust Wallet
+            if (window.trustwallet?.ethereum) {
+                wallets.push({ name: 'Trust', icon: '🛡️', provider: window.trustwallet.ethereum });
+            }
+            
+            // Generic injected (fallback)
+            if (window.ethereum && wallets.length === 0) {
+                wallets.push({ name: 'Browser Wallet', icon: '🌐', provider: window.ethereum });
+            }
+            
+            return wallets;
+        }
+
+        // ============ WALLET MODAL ============
+        function showWalletModal() {
+            const wallets = getAvailableWallets();
+            
+            if (wallets.length === 0) {
+                alert('No wallet detected! Please install MetaMask, Phantom, or Backpack.');
+                return;
+            }
+            
+            // If only one wallet, connect directly
+            if (wallets.length === 1) {
+                connectToWallet(wallets[0].provider);
+                return;
+            }
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'walletModal';
+            modal.style.cssText = `
+                position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
+                display: flex; align-items: center; justify-content: center; z-index: 9999;
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: var(--bg-card-solid); border-radius: 16px; padding: 24px;
+                min-width: 320px; border: 1px solid var(--border);
+            `;
+            content.innerHTML = `
+                <h3 style="margin:0 0 16px;color:var(--text-primary);font-size:18px;">Connect Wallet</h3>
+                <div id="walletList"></div>
+            `;
+            
+            const list = content.querySelector('#walletList');
+            wallets.forEach(w => {
+                const btn = document.createElement('button');
+                btn.style.cssText = `
+                    width: 100%; padding: 12px 16px; margin: 8px 0; border-radius: 12px;
+                    background: var(--bg-input); border: 1px solid var(--border);
+                    color: var(--text-primary); cursor: pointer; display: flex;
+                    align-items: center; gap: 12px; font-size: 16px; transition: all 0.2s;
+                `;
+                btn.innerHTML = `<span style="font-size:24px">${w.icon}</span> ${w.name}`;
+                btn.onmouseover = () => btn.style.borderColor = 'var(--purple-primary)';
+                btn.onmouseout = () => btn.style.borderColor = 'var(--border)';
+                btn.onclick = () => { modal.remove(); connectToWallet(w.provider); };
+                list.appendChild(btn);
+            });
+            
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+        }
 
         // ============ WALLET FUNCTIONS ============
         async function connectWallet() {
-            if (!window.ethereum) {
-                alert('Please install MetaMask or another Web3 wallet!');
-                return null;
-            }
+            showWalletModal();
+        }
 
+        async function connectToWallet(provider) {
+            selectedProvider = provider;
+            
             try {
                 // Request account access
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const accounts = await provider.request({ method: 'eth_requestAccounts' });
                 walletAddress = accounts[0];
                 
                 // Switch to Monad network
                 try {
-                    await window.ethereum.request({
+                    await provider.request({
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: MONAD_CHAIN.chainId }]
                     });
                 } catch (switchError) {
                     // Chain not added, add it
                     if (switchError.code === 4902) {
-                        await window.ethereum.request({
+                        await provider.request({
                             method: 'wallet_addEthereumChain',
                             params: [MONAD_CHAIN]
                         });
@@ -1423,11 +1547,11 @@
         }
 
         async function fetchBalances() {
-            if (!walletAddress) return;
+            if (!walletAddress || !selectedProvider) return;
             
             try {
                 // Fetch MON balance (native)
-                const monBalance = await window.ethereum.request({
+                const monBalance = await selectedProvider.request({
                     method: 'eth_getBalance',
                     params: [walletAddress, 'latest']
                 });
@@ -1446,9 +1570,10 @@
         }
 
         async function getTokenBalance(tokenAddress) {
+            if (!selectedProvider) return 0n;
             const data = '0x70a08231000000000000000000000000' + walletAddress.slice(2).toLowerCase();
             try {
-                const result = await window.ethereum.request({
+                const result = await selectedProvider.request({
                     method: 'eth_call',
                     params: [{ to: tokenAddress, data }, 'latest']
                 });
@@ -1560,8 +1685,73 @@
             const outputAmount = formatAmount(quote.toAmount, toToken.decimals);
             
             if (confirm(`Swap ${inputAmount} ${fromToken.symbol} for ~${outputAmount} ${toToken.symbol} via ${aggregator}?\n\nThis will open ${aggregator} to complete the swap.`)) {
+                // Add to history
+                addToHistory({
+                    fromAmount: inputAmount,
+                    fromSymbol: fromToken.symbol,
+                    toAmount: outputAmount,
+                    toSymbol: toToken.symbol,
+                    aggregator: aggregator,
+                    status: 'pending',
+                    timestamp: Date.now()
+                });
+                
                 window.open(swapUrl, '_blank');
             }
+        }
+
+        // ============ TAB SWITCHING ============
+        function showTab(tab) {
+            const swapPanel = document.getElementById('swapCard');
+            const historyPanel = document.getElementById('historyPanel');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => item.classList.remove('active'));
+            
+            if (tab === 'swap') {
+                swapPanel.style.display = '';
+                historyPanel.style.display = 'none';
+                navItems[0].classList.add('active');
+            } else if (tab === 'history') {
+                swapPanel.style.display = 'none';
+                historyPanel.style.display = '';
+                navItems[1].classList.add('active');
+                loadHistory();
+            }
+        }
+
+        // ============ HISTORY ============
+        let transactionHistory = JSON.parse(localStorage.getItem('purpleHistory') || '[]');
+
+        function loadHistory() {
+            const historyList = document.getElementById('historyList');
+            const noHistory = document.getElementById('noHistory');
+            
+            if (transactionHistory.length === 0) {
+                historyList.innerHTML = '';
+                noHistory.style.display = '';
+                return;
+            }
+            
+            noHistory.style.display = 'none';
+            historyList.innerHTML = transactionHistory.map(tx => `
+                <div style="padding:16px;margin-bottom:12px;background:var(--bg-input);border-radius:12px;border:1px solid var(--border)">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                        <span style="color:var(--text-primary);font-weight:500">${tx.fromAmount} ${tx.fromSymbol} → ${tx.toAmount} ${tx.toSymbol}</span>
+                        <span style="color:${tx.status === 'completed' ? 'var(--green)' : 'var(--orange)'};font-size:12px">${tx.status}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary)">
+                        <span>via ${tx.aggregator}</span>
+                        <span>${new Date(tx.timestamp).toLocaleString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addToHistory(tx) {
+            transactionHistory.unshift(tx);
+            if (transactionHistory.length > 50) transactionHistory.pop();
+            localStorage.setItem('purpleHistory', JSON.stringify(transactionHistory));
         }
 
         // ============ THEME ============
@@ -1781,12 +1971,15 @@
                 tokenNames[1].textContent = toToken.symbol;
             }
 
-            // Wallet event listeners
-            if (window.ethereum) {
-                window.ethereum.on('accountsChanged', (accounts) => {
+            // Setup wallet event listeners for connected provider
+            function setupWalletListeners(provider) {
+                if (!provider) return;
+                
+                provider.on('accountsChanged', (accounts) => {
                     if (accounts.length === 0) {
                         walletAddress = null;
                         walletBalances = {};
+                        selectedProvider = null;
                         document.querySelectorAll('.connect-btn').forEach(btn => {
                             btn.textContent = 'Connect Wallet';
                             btn.classList.remove('connected');
@@ -1799,18 +1992,24 @@
                     }
                 });
 
-                window.ethereum.on('chainChanged', () => {
+                provider.on('chainChanged', () => {
                     window.location.reload();
                 });
-
-                // Check if already connected
-                window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
+            }
+            
+            // Try to auto-reconnect if previously connected
+            const wallets = getAvailableWallets();
+            if (wallets.length > 0) {
+                const provider = wallets[0].provider;
+                provider.request({ method: 'eth_accounts' }).then(accounts => {
                     if (accounts.length > 0) {
+                        selectedProvider = provider;
                         walletAddress = accounts[0];
                         updateWalletUI();
                         fetchBalances();
+                        setupWalletListeners(provider);
                     }
-                });
+                }).catch(() => {});
             }
         });
     </script>

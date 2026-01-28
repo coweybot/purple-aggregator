@@ -703,6 +703,24 @@
             border-radius: 50%;
             object-fit: cover;
         }
+        
+        /* Skeleton Loading */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .skeleton-route {
+            height: 72px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, 
+                var(--bg-input) 0%, 
+                rgba(139, 92, 246, 0.1) 50%, 
+                var(--bg-input) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+        }
 
         .token-name {
             font-size: 16px;
@@ -1257,8 +1275,8 @@
                             <input type="text" inputmode="decimal" class="token-amount" value="1" placeholder="0" id="fromAmount" autocomplete="off">
                             <div class="token-usd">≈ $5,847.99</div>
                         </div>
-                        <div class="token-selector" id="fromTokenSelector">
-                            <img class="token-logo" id="fromTokenLogo" src="https://imagedelivery.net/tWwhAahBw7afBzFUrX5mYQ/monad-xyz.png/public" alt="MON">
+                        <div class="token-selector" id="fromTokenSelector" onclick="showTokenModal('from')">
+                            <img class="token-logo" id="fromTokenLogo" src="https://www.monad.xyz/favicon.ico" alt="MON">
                             <span class="token-name" id="fromTokenName">MON</span>
                             <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -1294,8 +1312,8 @@
                             <input type="text" class="token-amount" id="toAmount" value="0" placeholder="0" readonly>
                             <div class="token-usd" id="toUsd">≈ $0.00</div>
                         </div>
-                        <div class="token-selector" id="toTokenSelector">
-                            <img class="token-logo" id="toTokenLogo" src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png" alt="USDC">
+                        <div class="token-selector" id="toTokenSelector" onclick="showTokenModal('to')">
+                            <img class="token-logo" id="toTokenLogo" src="https://assets.coingecko.com/coins/images/6319/small/usdc.png" alt="USDC">
                             <span class="token-name" id="toTokenName">USDC</span>
                             <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -1415,43 +1433,43 @@
                 address: 'native', 
                 symbol: 'MON', 
                 decimals: 18, 
-                logo: 'https://imagedelivery.net/tWwhAahBw7afBzFUrX5mYQ/monad-xyz.png/public',
-                color: '#836EF9'
-            },
-            WMON: { 
-                address: '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A', 
-                symbol: 'WMON', 
-                decimals: 18, 
-                logo: 'https://imagedelivery.net/tWwhAahBw7afBzFUrX5mYQ/monad-xyz.png/public',
+                logo: 'https://www.monad.xyz/favicon.ico',
                 color: '#836EF9'
             },
             USDC: { 
                 address: '0x754704Bc059F8C67012fEd69BC8A327a5aafb603', 
                 symbol: 'USDC', 
                 decimals: 6, 
-                logo: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png',
+                logo: 'https://assets.coingecko.com/coins/images/6319/small/usdc.png',
                 color: '#2775CA'
-            },
-            WETH: { 
-                address: '0xEE8c0E9f1BFFb4Eb878d8f15f368A02a35481242', 
-                symbol: 'WETH', 
-                decimals: 18, 
-                logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-                color: '#627EEA'
             },
             USDT: { 
                 address: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D', 
                 symbol: 'USDT', 
                 decimals: 6, 
-                logo: 'https://cryptologos.cc/logos/tether-usdt-logo.png',
+                logo: 'https://assets.coingecko.com/coins/images/325/small/Tether.png',
                 color: '#26A17B'
+            },
+            WETH: { 
+                address: '0xEE8c0E9f1BFFb4Eb878d8f15f368A02a35481242', 
+                symbol: 'WETH', 
+                decimals: 18, 
+                logo: 'https://assets.coingecko.com/coins/images/2518/small/weth.png',
+                color: '#627EEA'
             },
             WBTC: { 
                 address: '0x0555E30da8f98308EdB960aa94C0Db47230d2B9c', 
                 symbol: 'WBTC', 
                 decimals: 8, 
-                logo: 'https://cryptologos.cc/logos/wrapped-bitcoin-wbtc-logo.png',
+                logo: 'https://assets.coingecko.com/coins/images/7598/small/wrapped_bitcoin_wbtc.png',
                 color: '#F7931A'
+            },
+            WSOL: { 
+                address: '0x5f0E4D95f5e5f5f5e5f5e5f5e5f5e5f5e5f5e5f5', 
+                symbol: 'WSOL', 
+                decimals: 9, 
+                logo: 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+                color: '#14F195'
             },
         };
         
@@ -1763,6 +1781,83 @@
             }
         }
 
+        // ============ TOKEN SELECTOR ============
+        function showTokenModal(side) {
+            const modal = document.createElement('div');
+            modal.id = 'tokenModal';
+            modal.style.cssText = `
+                position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
+                display: flex; align-items: center; justify-content: center; z-index: 9999;
+                backdrop-filter: blur(4px);
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: var(--bg-card-solid); border-radius: 20px; padding: 20px;
+                min-width: 340px; max-width: 400px; border: 1px solid var(--border);
+                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            `;
+            
+            content.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                    <h3 style="margin:0;color:var(--text-primary);font-size:18px">Select Token</h3>
+                    <button onclick="document.getElementById('tokenModal').remove()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px">✕</button>
+                </div>
+                <div id="tokenList" style="max-height:300px;overflow-y:auto"></div>
+            `;
+            
+            const list = content.querySelector('#tokenList');
+            const currentToken = side === 'from' ? fromToken : toToken;
+            const otherToken = side === 'from' ? toToken : fromToken;
+            
+            Object.values(TOKENS).forEach(token => {
+                if (token.symbol === otherToken.symbol) return; // Can't select same as other side
+                
+                const isSelected = token.symbol === currentToken.symbol;
+                const btn = document.createElement('button');
+                btn.style.cssText = `
+                    width: 100%; padding: 12px 16px; margin: 4px 0; border-radius: 12px;
+                    background: ${isSelected ? 'rgba(139, 92, 246, 0.2)' : 'var(--bg-input)'}; 
+                    border: 1px solid ${isSelected ? 'var(--purple-primary)' : 'var(--border)'};
+                    color: var(--text-primary); cursor: pointer; display: flex;
+                    align-items: center; gap: 12px; font-size: 15px; transition: all 0.15s;
+                `;
+                btn.innerHTML = `
+                    <img src="${token.logo}" style="width:32px;height:32px;border-radius:50%" onerror="this.style.background='${token.color}';this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'">
+                    <span style="font-weight:500">${token.symbol}</span>
+                `;
+                btn.onmouseover = () => { if (!isSelected) btn.style.borderColor = 'var(--purple-primary)'; };
+                btn.onmouseout = () => { if (!isSelected) btn.style.borderColor = 'var(--border)'; };
+                btn.onclick = () => { 
+                    selectToken(side, token); 
+                    modal.remove(); 
+                };
+                list.appendChild(btn);
+            });
+            
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+        }
+        
+        function selectToken(side, token) {
+            if (side === 'from') {
+                fromToken = token;
+                document.getElementById('fromTokenLogo').src = token.logo;
+                document.getElementById('fromTokenName').textContent = token.symbol;
+            } else {
+                toToken = token;
+                document.getElementById('toTokenLogo').src = token.logo;
+                document.getElementById('toTokenName').textContent = token.symbol;
+            }
+            
+            // Refetch quotes with new pair
+            const amount = document.getElementById('fromAmount').value;
+            if (amount && parseFloat(amount) > 0) {
+                fetchQuotes(amount);
+            }
+        }
+
         // ============ TAB SWITCHING ============
         function showTab(tab) {
             const swapPanel = document.getElementById('swapCard');
@@ -1982,14 +2077,18 @@
         function showLoading() {
             const routesList = document.getElementById('routesList');
             if (routesList) {
-                routesList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary)">🔄 Fetching quotes...</div>';
+                routesList.innerHTML = `
+                    <div class="skeleton-route"></div>
+                    <div class="skeleton-route"></div>
+                    <div class="skeleton-route"></div>
+                `;
             }
         }
 
         function showError(msg) {
             const routesList = document.getElementById('routesList');
             if (routesList) {
-                routesList.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red)">${msg}</div>`;
+                routesList.innerHTML = `<div style="text-align:center;padding:20px;color:#ef4444">${msg}</div>`;
             }
         }
 
@@ -1998,9 +2097,11 @@
         // ============ INPUT HANDLING ============
         function onAmountChange(e) {
             clearTimeout(debounceTimer);
+            // Show loading immediately for responsiveness
+            showLoading();
             debounceTimer = setTimeout(() => {
                 fetchQuotes(e.target.value);
-            }, 500);
+            }, 300);
         }
 
         // ============ CONFETTI ============

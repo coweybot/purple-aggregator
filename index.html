@@ -696,6 +696,13 @@
         .token-icon.usdt {
             background: linear-gradient(135deg, #26A17B, #1a7a5c);
         }
+        
+        .token-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
 
         .token-name {
             font-size: 16px;
@@ -1243,16 +1250,16 @@
                 <div class="token-input-wrapper">
                     <div class="token-input-header">
                         <span class="token-label">From</span>
-                        <span class="token-balance">Balance: <span>100.00 WMON</span></span>
+                        <span class="token-balance">Balance: <span id="fromBalance">0.00 MON</span></span>
                     </div>
                     <div class="token-input-row">
                         <div class="token-amount-wrapper">
                             <input type="text" inputmode="decimal" class="token-amount" value="1" placeholder="0" id="fromAmount" autocomplete="off">
                             <div class="token-usd">≈ $5,847.99</div>
                         </div>
-                        <div class="token-selector">
-                            <div class="token-icon"></div>
-                            <span class="token-name">ETH</span>
+                        <div class="token-selector" id="fromTokenSelector">
+                            <img class="token-logo" id="fromTokenLogo" src="https://imagedelivery.net/tWwhAahBw7afBzFUrX5mYQ/monad-xyz.png/public" alt="MON">
+                            <span class="token-name" id="fromTokenName">MON</span>
                             <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
@@ -1280,16 +1287,16 @@
                 <div class="token-input-wrapper">
                     <div class="token-input-header">
                         <span class="token-label">To</span>
-                        <span class="token-balance">Balance: <span>0 USDC</span></span>
+                        <span class="token-balance">Balance: <span id="toBalance">0 USDC</span></span>
                     </div>
                     <div class="token-input-row">
                         <div class="token-amount-wrapper">
-                            <input type="text" class="token-amount" id="toAmount" value="5,849.52" placeholder="0" readonly>
-                            <div class="token-usd">≈ $5,849.52</div>
+                            <input type="text" class="token-amount" id="toAmount" value="0" placeholder="0" readonly>
+                            <div class="token-usd" id="toUsd">≈ $0.00</div>
                         </div>
-                        <div class="token-selector">
-                            <div class="token-icon usdt"></div>
-                            <span class="token-name">USDC</span>
+                        <div class="token-selector" id="toTokenSelector">
+                            <img class="token-logo" id="toTokenLogo" src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png" alt="USDC">
+                            <span class="token-name" id="toTokenName">USDC</span>
                             <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
@@ -1320,7 +1327,7 @@
                     <div class="partners-logos">
                         <div class="partner-logo"><img src="https://openocean.finance/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> OpenOcean</div>
                         <div class="partner-logo"><img src="https://kyberswap.com/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> KyberSwap</div>
-                        <div class="partner-logo">🟣 Mace</div>
+                        <div class="partner-logo"><img src="https://mace.ag/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px; border-radius: 4px;" onerror="this.outerHTML='🟣'"> Mace</div>
                     </div>
                 </div>
             </div>
@@ -1351,7 +1358,7 @@
                     <div class="partners-logos">
                         <div class="partner-logo"><img src="https://openocean.finance/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> OpenOcean</div>
                         <div class="partner-logo"><img src="https://kyberswap.com/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> KyberSwap</div>
-                        <div class="partner-logo">🟣 Mace</div>
+                        <div class="partner-logo"><img src="https://mace.ag/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px; border-radius: 4px;" onerror="this.outerHTML='🟣'"> Mace</div>
                     </div>
                 </div>
             </div>
@@ -1387,11 +1394,11 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-label">Slippage</div>
-                        <div class="stat-value">0.5%</div>
+                        <div class="stat-value" id="slippageValue">0.5%</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-label">Price Impact</div>
-                        <div class="stat-value green">&lt;0.01%</div>
+                        <div class="stat-value green" id="priceImpactValue">&lt;0.01%</div>
                     </div>
                 </div>
             </div>
@@ -1402,16 +1409,54 @@
         // ============ CONFIG ============
         const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api';
         
-        // Monad Mainnet Tokens
+        // Monad Mainnet Tokens with logos
         const TOKENS = {
-            WMON: { address: '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A', symbol: 'WMON', decimals: 18, icon: '🟣' },
-            USDC: { address: '0x754704Bc059F8C67012fEd69BC8A327a5aafb603', symbol: 'USDC', decimals: 6, icon: '💵' },
-            WETH: { address: '0xEE8c0E9f1BFFb4Eb878d8f15f368A02a35481242', symbol: 'WETH', decimals: 18, icon: '💎' },
-            USDT: { address: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D', symbol: 'USDT', decimals: 6, icon: '💲' },
-            WBTC: { address: '0x0555E30da8f98308EdB960aa94C0Db47230d2B9c', symbol: 'WBTC', decimals: 8, icon: '🟠' },
+            MON: { 
+                address: 'native', 
+                symbol: 'MON', 
+                decimals: 18, 
+                logo: 'https://imagedelivery.net/tWwhAahBw7afBzFUrX5mYQ/monad-xyz.png/public',
+                color: '#836EF9'
+            },
+            WMON: { 
+                address: '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A', 
+                symbol: 'WMON', 
+                decimals: 18, 
+                logo: 'https://imagedelivery.net/tWwhAahBw7afBzFUrX5mYQ/monad-xyz.png/public',
+                color: '#836EF9'
+            },
+            USDC: { 
+                address: '0x754704Bc059F8C67012fEd69BC8A327a5aafb603', 
+                symbol: 'USDC', 
+                decimals: 6, 
+                logo: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png',
+                color: '#2775CA'
+            },
+            WETH: { 
+                address: '0xEE8c0E9f1BFFb4Eb878d8f15f368A02a35481242', 
+                symbol: 'WETH', 
+                decimals: 18, 
+                logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+                color: '#627EEA'
+            },
+            USDT: { 
+                address: '0xe7cd86e13AC4309349F30B3435a9d337750fC82D', 
+                symbol: 'USDT', 
+                decimals: 6, 
+                logo: 'https://cryptologos.cc/logos/tether-usdt-logo.png',
+                color: '#26A17B'
+            },
+            WBTC: { 
+                address: '0x0555E30da8f98308EdB960aa94C0Db47230d2B9c', 
+                symbol: 'WBTC', 
+                decimals: 8, 
+                logo: 'https://cryptologos.cc/logos/wrapped-bitcoin-wbtc-logo.png',
+                color: '#F7931A'
+            },
         };
         
-        let fromToken = TOKENS.WMON;
+        // Default to MON -> USDC
+        let fromToken = TOKENS.MON;
         let toToken = TOKENS.USDC;
         let lastQuotes = null;
         let debounceTimer = null;
@@ -1617,18 +1662,18 @@
         }
 
         function updateBalanceDisplay() {
-            // Update FROM balance
-            const fromBalanceEl = document.querySelector('.token-input-wrapper:first-of-type .token-balance span');
-            if (fromBalanceEl && walletBalances.WMON !== undefined) {
-                const bal = Number(walletBalances.WMON) / 1e18;
-                fromBalanceEl.textContent = bal.toFixed(4) + ' WMON';
+            // Update FROM balance (MON = native balance)
+            const fromBalanceEl = document.getElementById('fromBalance');
+            if (fromBalanceEl && walletBalances.MON !== undefined) {
+                const bal = Number(walletBalances.MON) / 1e18;
+                fromBalanceEl.textContent = bal.toFixed(4) + ' ' + fromToken.symbol;
             }
             
             // Update TO balance
-            const toBalanceEl = document.querySelector('.token-input-wrapper:last-of-type .token-balance span');
+            const toBalanceEl = document.getElementById('toBalance');
             if (toBalanceEl && walletBalances.USDC !== undefined) {
                 const bal = Number(walletBalances.USDC) / 1e6;
-                toBalanceEl.textContent = bal.toFixed(2) + ' USDC';
+                toBalanceEl.textContent = bal.toFixed(2) + ' ' + toToken.symbol;
             }
         }
 
@@ -1793,22 +1838,67 @@
             
             const amountWei = BigInt(Math.floor(parseFloat(amount) * (10 ** fromToken.decimals))).toString();
             
+            // For MON (native), use WMON address for API calls
+            const tokenInAddress = fromToken.address === 'native' ? TOKENS.WMON.address : fromToken.address;
+            const tokenOutAddress = toToken.address === 'native' ? TOKENS.WMON.address : toToken.address;
+            
             try {
                 showLoading();
+                
+                // Add timeout for faster failure
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                
                 const response = await fetch(
-                    `${API_BASE}/quote?tokenIn=${fromToken.address}&tokenOut=${toToken.address}&amount=${amountWei}&decimals=${fromToken.decimals}`
+                    `${API_BASE}/quote?tokenIn=${tokenInAddress}&tokenOut=${tokenOutAddress}&amount=${amountWei}&decimals=${fromToken.decimals}`,
+                    { signal: controller.signal }
                 );
+                clearTimeout(timeoutId);
+                
                 const data = await response.json();
                 
                 if (data.success) {
                     lastQuotes = data;
                     updateQuoteDisplay(data);
+                    updateStats(data);
                 } else {
                     showError('Failed to fetch quotes');
                 }
             } catch (err) {
-                console.error('Quote error:', err);
-                showError('API unavailable - start backend with: npm start');
+                if (err.name === 'AbortError') {
+                    showError('Request timed out - retrying...');
+                    // Retry once with shorter timeout
+                    try {
+                        const response = await fetch(
+                            `${API_BASE}/quote?tokenIn=${tokenInAddress}&tokenOut=${tokenOutAddress}&amount=${amountWei}&decimals=${fromToken.decimals}`
+                        );
+                        const data = await response.json();
+                        if (data.success) {
+                            lastQuotes = data;
+                            updateQuoteDisplay(data);
+                            updateStats(data);
+                        }
+                    } catch (e) { showError('API unavailable'); }
+                } else {
+                    console.error('Quote error:', err);
+                    showError('API unavailable');
+                }
+            }
+        }
+        
+        function updateStats(data) {
+            const slippageEl = document.getElementById('slippageValue');
+            const priceImpactEl = document.getElementById('priceImpactValue');
+            
+            if (data.bestQuote?.quote) {
+                const quote = data.bestQuote.quote;
+                
+                // Update price impact if available
+                if (quote.priceImpact && priceImpactEl) {
+                    const impact = parseFloat(quote.priceImpact);
+                    priceImpactEl.textContent = impact < 0.01 ? '<0.01%' : impact.toFixed(2) + '%';
+                    priceImpactEl.className = 'stat-value ' + (impact < 1 ? 'green' : impact < 3 ? '' : 'red');
+                }
             }
         }
 

@@ -16,21 +16,40 @@ const adapters = [
 ];
 
 /**
+ * Timeout wrapper for faster failures
+ */
+function withTimeout(promise, ms, name) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error(`${name} timeout after ${ms}ms`)), ms)
+    )
+  ]);
+}
+
+/**
  * Get quotes from all active aggregators in parallel
  */
 export async function getAllQuotes(params) {
   const { tokenIn, tokenOut, amount, slippage, userAddress } = params;
   
+  // Timeout per adapter (5 seconds max)
+  const ADAPTER_TIMEOUT = 5000;
+  
   const quotePromises = adapters.map(async (adapter) => {
+    const startTime = Date.now();
     try {
-      const startTime = Date.now();
-      const quote = await adapter.getQuote({
-        tokenIn,
-        tokenOut,
-        amount,
-        slippage,
-        userAddress
-      });
+      const quote = await withTimeout(
+        adapter.getQuote({
+          tokenIn,
+          tokenOut,
+          amount,
+          slippage,
+          userAddress
+        }),
+        ADAPTER_TIMEOUT,
+        adapter.name
+      );
       const responseTime = Date.now() - startTime;
       
       return {
@@ -44,7 +63,7 @@ export async function getAllQuotes(params) {
         aggregator: adapter.name,
         success: false,
         error: error.message,
-        responseTime: 0
+        responseTime: Date.now() - startTime
       };
     }
   });

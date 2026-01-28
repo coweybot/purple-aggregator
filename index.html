@@ -1805,7 +1805,7 @@
                     <h3 style="margin:0;color:var(--text-primary);font-size:18px">Select Token</h3>
                     <button onclick="document.getElementById('tokenModal').remove()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px">✕</button>
                 </div>
-                <div id="tokenList" style="max-height:300px;overflow-y:auto"></div>
+                <div id="tokenList" style="max-height:300px;overflow-y:auto;position:relative;z-index:10001"></div>
             `;
             
             const list = content.querySelector('#tokenList');
@@ -1823,6 +1823,7 @@
                     border: 1px solid ${isSelected ? 'var(--purple-primary)' : 'var(--border)'};
                     color: var(--text-primary); cursor: pointer; display: flex;
                     align-items: center; gap: 12px; font-size: 15px; transition: all 0.15s;
+                    position: relative; z-index: 10000; pointer-events: auto;
                 `;
                 btn.innerHTML = `
                     <img src="${token.logo}" style="width:32px;height:32px;border-radius:50%" onerror="this.style.background='${token.color}';this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'">

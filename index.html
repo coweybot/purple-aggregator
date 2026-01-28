@@ -1277,7 +1277,7 @@
                     <div class="token-input-row">
                         <div class="token-amount-wrapper">
                             <input type="text" inputmode="decimal" class="token-amount" value="1" placeholder="0" id="fromAmount" autocomplete="off">
-                            <div class="token-usd">≈ $5,847.99</div>
+                            <div class="token-usd" id="fromUsd">≈ $0.00</div>
                         </div>
                         <div class="token-selector" id="fromTokenSelector">
                             <img class="token-logo" id="fromTokenLogo" src="https://www.monad.xyz/favicon.ico" alt="MON">
@@ -2188,6 +2188,36 @@
                 } else if (savingsDisplay) {
                     savingsDisplay.textContent = 'Best available';
                     savingsDisplay.style.color = 'var(--green)';
+                }
+                
+                // Update USD values
+                const inputAmount = parseFloat(document.getElementById('fromAmount').value) || 0;
+                const outputAmount = Number(BigInt(best.quote.toAmount)) / (10 ** toToken.decimals);
+                
+                // Calculate USD values (assume USDC/USDT = $1)
+                const fromUsdEl = document.getElementById('fromUsd');
+                const toUsdEl = document.getElementById('toUsd');
+                
+                // If output is stablecoin, use it to calculate input USD value
+                const isOutputStable = ['USDC', 'USDT'].includes(toToken.symbol);
+                const isInputStable = ['USDC', 'USDT'].includes(fromToken.symbol);
+                
+                if (isOutputStable && fromUsdEl) {
+                    // Output is stable, so output amount ≈ USD value of input
+                    fromUsdEl.textContent = `≈ $${outputAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                } else if (isInputStable && fromUsdEl) {
+                    // Input is stable
+                    fromUsdEl.textContent = `≈ $${inputAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                } else if (fromUsdEl) {
+                    fromUsdEl.textContent = `≈ --`;
+                }
+                
+                if (isOutputStable && toUsdEl) {
+                    toUsdEl.textContent = `≈ $${outputAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                } else if (isInputStable && toUsdEl) {
+                    toUsdEl.textContent = `≈ $${inputAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                } else if (toUsdEl) {
+                    toUsdEl.textContent = `≈ --`;
                 }
             }
             

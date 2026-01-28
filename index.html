@@ -680,9 +680,13 @@
             border: 1px solid var(--border);
         }
 
-        .token-selector:hover {
+        .token-selector:hover, .token-selector:active {
             background: rgba(139, 92, 246, 0.15);
             border-color: rgba(139, 92, 246, 0.3);
+        }
+        
+        .token-selector:active {
+            transform: scale(0.98);
             transform: scale(1.02);
         }
 
@@ -1284,10 +1288,10 @@
                         </div>
                     </div>
                     <div class="quick-amounts">
-                        <button class="quick-btn">25%</button>
-                        <button class="quick-btn">50%</button>
-                        <button class="quick-btn">75%</button>
-                        <button class="quick-btn max">MAX</button>
+                        <button class="quick-btn" data-percent="25">25%</button>
+                        <button class="quick-btn" data-percent="50">50%</button>
+                        <button class="quick-btn" data-percent="75">75%</button>
+                        <button class="quick-btn max" data-percent="100">MAX</button>
                     </div>
                 </div>
 
@@ -2335,6 +2339,37 @@
                     swapTokenDirection();
                 });
             }
+            
+            // Quick amount buttons (25%, 50%, 75%, MAX)
+            document.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const percent = parseInt(btn.dataset.percent);
+                    if (walletAddress && walletBalances.MON) {
+                        const balance = Number(walletBalances.MON) / 1e18;
+                        const amount = (balance * percent / 100).toFixed(6);
+                        document.getElementById('fromAmount').value = amount;
+                        fetchQuotes(amount);
+                    } else {
+                        // Demo mode - use placeholder amounts
+                        const demoAmounts = { 25: '0.25', 50: '0.5', 75: '0.75', 100: '1' };
+                        document.getElementById('fromAmount').value = demoAmounts[percent];
+                        fetchQuotes(demoAmounts[percent]);
+                    }
+                });
+            });
+            
+            // Add touch support for token selectors (mobile)
+            ['fromTokenSelector', 'toTokenSelector'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const side = id === 'fromTokenSelector' ? 'from' : 'to';
+                        showTokenModal(side);
+                    }, { passive: false });
+                }
+            });
 
             // Setup wallet event listeners for connected provider
             function setupWalletListeners(provider) {

@@ -2123,29 +2123,100 @@
                 backdrop-filter: blur(4px);
             `;
             
+            // Parse route details from API response
             const route = quote.quote?.route;
-            const steps = [];
+            let routeHtml = '';
             
-            // Build route steps
-            steps.push({ token: fromToken.symbol, action: 'Input' });
-            if (route?.routes) {
-                route.routes.forEach((r, i) => {
-                    r.subRoutes?.forEach(sub => {
-                        sub.dexes?.forEach(dex => {
-                            steps.push({ dex: dex.dex, percentage: dex.percentage + '%' });
-                        });
-                    });
+            // Build detailed route visualization
+            if (route?.routes && route.routes.length > 0) {
+                const subRoutes = route.routes[0]?.subRoutes || [];
+                
+                // Start with FROM token
+                routeHtml = `
+                    <div style="display:flex;flex-direction:column;gap:0">
+                        <div style="display:flex;align-items:center;gap:12px;padding:12px 0">
+                            <div style="width:40px;height:40px;border-radius:50%;background:var(--purple-subtle);display:flex;align-items:center;justify-content:center">
+                                <img src="${fromToken.logo}" style="width:28px;height:28px;border-radius:50%" onerror="this.style.display='none'">
+                            </div>
+                            <div>
+                                <div style="color:var(--text-primary);font-weight:600">${fromToken.symbol}</div>
+                                <div style="color:var(--text-tertiary);font-size:12px">Input Token</div>
+                            </div>
+                        </div>
+                `;
+                
+                // Add each sub-route (hop)
+                subRoutes.forEach((sub, idx) => {
+                    const dexes = sub.dexes || [];
+                    const dexNames = dexes.map(d => `${d.dex} (${d.percentage}%)`).join(', ');
+                    const mainDex = dexes.length > 0 ? dexes.sort((a,b) => b.percentage - a.percentage)[0] : null;
+                    
+                    routeHtml += `
+                        <div style="margin-left:19px;border-left:2px solid var(--purple-primary);padding-left:24px;padding:8px 0 8px 24px">
+                            <div style="background:var(--bg-input);border-radius:10px;padding:10px 14px;border:1px solid var(--border)">
+                                <div style="color:var(--purple-primary);font-weight:500;font-size:13px;margin-bottom:4px">
+                                    Step ${idx + 1}: ${mainDex ? mainDex.dex : quote.aggregator}
+                                </div>
+                                <div style="color:var(--text-tertiary);font-size:11px">
+                                    ${dexes.length > 1 ? `Split: ${dexNames}` : (mainDex ? `Via ${mainDex.dex}` : 'Direct swap')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 });
+                
+                // End with TO token
+                routeHtml += `
+                        <div style="display:flex;align-items:center;gap:12px;padding:12px 0">
+                            <div style="width:40px;height:40px;border-radius:50%;background:rgba(34,197,94,0.2);display:flex;align-items:center;justify-content:center">
+                                <img src="${toToken.logo}" style="width:28px;height:28px;border-radius:50%" onerror="this.style.display='none'">
+                            </div>
+                            <div>
+                                <div style="color:var(--green);font-weight:600">${toToken.symbol}</div>
+                                <div style="color:var(--text-tertiary);font-size:12px">Output Token</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
             } else {
-                steps.push({ dex: quote.aggregator, percentage: '100%' });
+                // Simple route (no detailed hops)
+                routeHtml = `
+                    <div style="display:flex;flex-direction:column;gap:0">
+                        <div style="display:flex;align-items:center;gap:12px;padding:12px 0">
+                            <div style="width:40px;height:40px;border-radius:50%;background:var(--purple-subtle);display:flex;align-items:center;justify-content:center">
+                                <img src="${fromToken.logo}" style="width:28px;height:28px;border-radius:50%" onerror="this.style.display='none'">
+                            </div>
+                            <div>
+                                <div style="color:var(--text-primary);font-weight:600">${fromToken.symbol}</div>
+                                <div style="color:var(--text-tertiary);font-size:12px">Input Token</div>
+                            </div>
+                        </div>
+                        <div style="margin-left:19px;border-left:2px solid var(--purple-primary);padding-left:24px;padding:8px 0 8px 24px">
+                            <div style="background:var(--bg-input);border-radius:10px;padding:10px 14px;border:1px solid var(--border)">
+                                <div style="color:var(--purple-primary);font-weight:500;font-size:13px">
+                                    Via ${quote.aggregator}
+                                </div>
+                                <div style="color:var(--text-tertiary);font-size:11px">Direct swap</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:12px;padding:12px 0">
+                            <div style="width:40px;height:40px;border-radius:50%;background:rgba(34,197,94,0.2);display:flex;align-items:center;justify-content:center">
+                                <img src="${toToken.logo}" style="width:28px;height:28px;border-radius:50%" onerror="this.style.display='none'">
+                            </div>
+                            <div>
+                                <div style="color:var(--green);font-weight:600">${toToken.symbol}</div>
+                                <div style="color:var(--text-tertiary);font-size:12px">Output Token</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
-            steps.push({ token: toToken.symbol, action: 'Output' });
             
             const content = document.createElement('div');
             content.style.cssText = `
                 background: var(--bg-card-solid); border-radius: 20px; padding: 24px;
                 min-width: 360px; max-width: 450px; border: 1px solid var(--border);
-                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+                box-shadow: 0 20px 60px rgba(0,0,0,0.5); max-height: 80vh; overflow-y: auto;
             `;
             
             content.innerHTML = `
@@ -2167,14 +2238,8 @@
                         <span style="color:var(--text-primary)">${quote.quote?.estimatedGas || 'N/A'}</span>
                     </div>
                 </div>
-                <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">Swap Route</div>
-                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                    <div style="background:var(--purple-subtle);color:var(--purple-primary);padding:8px 12px;border-radius:8px;font-weight:500">${fromToken.symbol}</div>
-                    <span style="color:var(--text-tertiary)">→</span>
-                    <div style="background:var(--bg-input);color:var(--text-primary);padding:8px 12px;border-radius:8px">${quote.aggregator}</div>
-                    <span style="color:var(--text-tertiary)">→</span>
-                    <div style="background:var(--green);background:rgba(34,197,94,0.2);color:var(--green);padding:8px 12px;border-radius:8px;font-weight:500">${toToken.symbol}</div>
-                </div>
+                <div style="color:var(--text-secondary);font-size:13px;margin-bottom:8px">Swap Route</div>
+                ${routeHtml}
             `;
             
             modal.onclick = (e) => { if (e.target === modal) modal.remove(); };

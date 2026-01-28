@@ -627,6 +627,8 @@
 
         .token-amount-wrapper {
             flex: 1;
+            position: relative;
+            z-index: 10;
         }
 
         .token-amount {
@@ -641,10 +643,19 @@
             cursor: text;
             -webkit-appearance: none;
             -moz-appearance: textfield;
+            padding: 8px 0;
+            min-height: 44px;
+            touch-action: manipulation;
         }
         
         .token-amount:focus {
             caret-color: var(--purple-primary);
+        }
+        
+        .token-amount::-webkit-outer-spin-button,
+        .token-amount::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
 
         .token-amount::placeholder {

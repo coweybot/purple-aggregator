@@ -2251,9 +2251,9 @@
             try {
                 showLoading();
                 
-                // Add timeout for faster failure
+                // Add timeout for faster failure (reduced to 4s for speed)
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
                 
                 const response = await fetch(
                     `${API_BASE}/quote?tokenIn=${tokenInAddress}&tokenOut=${tokenOutAddress}&amount=${amountWei}&decimals=${fromToken.decimals}`,

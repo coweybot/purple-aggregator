@@ -117,10 +117,12 @@ export function getBestQuote(quotes) {
 
   const best = successfulQuotes[0];
   
-  // Calculate savings vs worst quote
+  // Calculate savings vs worst quote (with division by zero protection)
   const worst = successfulQuotes[successfulQuotes.length - 1];
-  const savingsPercent = successfulQuotes.length > 1 
-    ? ((BigInt(best.quote.toAmount) - BigInt(worst.quote.toAmount)) * 10000n / BigInt(worst.quote.toAmount)) / 100n
+  const worstAmount = BigInt(worst?.quote?.toAmount || '1');
+  const bestAmount = BigInt(best?.quote?.toAmount || '0');
+  const savingsPercent = successfulQuotes.length > 1 && worstAmount > 0n
+    ? ((bestAmount - worstAmount) * 10000n / worstAmount) / 100n
     : 0n;
 
   return {

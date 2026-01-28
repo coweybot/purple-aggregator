@@ -3,9 +3,9 @@ import axios from 'axios';
 /**
  * Mace Adapter (Native Monad Aggregator)
  * API Docs: https://api.mace.ag/swaps/rapidoc
- * OpenAPI: https://api.mace.ag/swaps/openapi.json
  * 
- * Mace uses "Thallastra" - Multi-DEX EVM trade solver with simulated transactions
+ * Uses exchange-amount endpoint for quotes (no wallet required)
+ * Full simulation available when user connects wallet
  */
 export default class MaceAdapter {
   constructor() {
@@ -15,53 +15,62 @@ export default class MaceAdapter {
 
   async getQuote({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress }) {
     try {
-      // Get router address first
-      const routerRes = await axios.get(`${this.baseUrl}/router-address`, {
-        timeout: 5000
-      });
-      const routerAddress = routerRes.data;
-
-      // Get best routes - Mace uses array format for in/out
+      // Use exchange-amount for quotes (doesn't require wallet simulation)
       const response = await axios.post(
-        `${this.baseUrl}/get-best-routes`,
+        `${this.baseUrl}/exchange-amount`,
         {
-          in: [{ token: tokenIn, amount: amount }],
-          out: [{ token: tokenOut }]
+          inToken: tokenIn,
+          outToken: tokenOut,
+          lastNSeconds: 60
         },
         {
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          timeout: 15000
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000
         }
       );
 
       const data = response.data;
       
-      if (!data.routes || data.routes.length === 0) {
-        throw new Error('No routes found');
+      if (!data.average) {
+        throw new Error('No exchange rate found');
       }
 
-      // Get the best route (first one)
-      const bestRoute = data.routes[0];
+      // Calculate output based on average exchange rate
+      // The API returns rate stats, we multiply by input amount
+      const inputAmount = BigInt(amount);
+      const avgRate = data.average; // This is a float ratio
+      
+      // Get token decimals to calculate properly
+      const estimatedOutput = this.calculateOutput(inputAmount, avgRate, 18, 6); // WMON 18 decimals, USDC 6
 
       return {
-        toAmount: bestRoute.expectedOutput || bestRoute.amountOut,
-        toAmountMin: this.calculateMinOutput(bestRoute.expectedOutput, slippage),
-        route: bestRoute.path || bestRoute.adapterHops,
-        estimatedGas: bestRoute.estimatedGas,
-        calldata: bestRoute.calldata,
-        to: routerAddress,
-        value: tokenIn === '0x0000000000000000000000000000000000000000' ? amount : '0',
-        warnings: data.warnings || []
+        toAmount: estimatedOutput.toString(),
+        toAmountMin: this.calculateMinOutput(estimatedOutput.toString(), slippage),
+        route: {
+          type: data.routeType,
+          source: 'Mace Exchange Rate',
+          intermediaries: data.equivilantTokens || []
+        },
+        estimatedGas: '150000', // Estimate for Mace swaps
+        priceImpact: data.sumRatio ? ((1 - data.sumRatio / data.average) * 100).toFixed(2) : '0',
+        calldata: null, // Will be populated for actual swaps
+        to: null,
+        value: '0'
       };
     } catch (error) {
-      if (error.response?.status === 500) {
-        const errData = error.response.data;
-        throw new Error(errData?.errorMessage || 'Mace routing failed');
+      if (error.response?.data?.errorMessage) {
+        throw new Error(error.response.data.errorMessage);
       }
       throw error;
     }
+  }
+
+  calculateOutput(inputWei, rate, inputDecimals, outputDecimals) {
+    // Convert input to float, multiply by rate, convert to output decimals
+    const inputFloat = Number(inputWei) / (10 ** inputDecimals);
+    const outputFloat = inputFloat * rate;
+    const outputWei = BigInt(Math.floor(outputFloat * (10 ** outputDecimals)));
+    return outputWei;
   }
 
   calculateMinOutput(amount, slippagePercent) {

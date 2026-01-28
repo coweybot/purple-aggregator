@@ -1293,13 +1293,11 @@
 
                 <!-- Partners -->
                 <div class="partners-section">
-                    <div class="partners-label">Integrated with</div>
+                    <div class="partners-label">Aggregators</div>
                     <div class="partners-logos">
-                        <div class="partner-logo">🟣 Monad</div>
-                        <div class="partner-logo">⟠ Ethereum</div>
-                        <div class="partner-logo">🦄 Uniswap</div>
-                        <div class="partner-logo">🔷 1inch</div>
-                        <div class="partner-logo">🟢 Jupiter</div>
+                        <div class="partner-logo"><img src="https://openocean.finance/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> OpenOcean</div>
+                        <div class="partner-logo"><img src="https://kyberswap.com/favicon.ico" width="16" height="16" style="vertical-align: middle; margin-right: 4px;"> KyberSwap</div>
+                        <div class="partner-logo">🟣 Mace</div>
                     </div>
                 </div>
             </div>
@@ -1423,7 +1421,12 @@
                 return amtB > amtA ? 1 : -1;
             });
             
-            const icons = { 'OpenOcean': '🌊', 'KyberSwap': '💎', 'Mace': '🟣', '0x': '⚫' };
+            const icons = { 
+                'OpenOcean': '<img src="https://openocean.finance/favicon.ico" width="20" height="20" style="border-radius:50%">', 
+                'KyberSwap': '<img src="https://kyberswap.com/favicon.ico" width="20" height="20" style="border-radius:50%">', 
+                'Mace': '<img src="https://mace.ag/favicon.ico" width="20" height="20" style="border-radius:50%" onerror="this.outerHTML=\'🟣\'">', 
+                '0x': '⚫' 
+            };
             
             routesList.innerHTML = quotes.map((q, i) => {
                 const amount = formatAmount(q.quote.toAmount, toToken.decimals);

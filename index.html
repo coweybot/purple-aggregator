@@ -687,7 +687,69 @@
         
         .token-selector:active {
             transform: scale(0.98);
-            transform: scale(1.02);
+        }
+        
+        .token-selector-wrapper {
+            position: relative;
+        }
+        
+        .token-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            min-width: 180px;
+            max-height: 280px;
+            overflow-y: auto;
+            background: var(--bg-card-solid);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            z-index: 1000;
+            padding: 8px;
+        }
+        
+        .token-dropdown.open {
+            display: block;
+            animation: dropdownSlide 0.15s ease-out;
+        }
+        
+        @keyframes dropdownSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .token-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            border: 1px solid transparent;
+        }
+        
+        .token-dropdown-item:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+        
+        .token-dropdown-item.selected {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: var(--purple-primary);
+        }
+        
+        .token-dropdown-item img {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+        }
+        
+        .token-dropdown-item span {
+            font-weight: 500;
+            color: var(--text-primary);
         }
 
         .token-icon {
@@ -1279,12 +1341,15 @@
                             <input type="text" inputmode="decimal" class="token-amount" value="1" placeholder="0" id="fromAmount" autocomplete="off">
                             <div class="token-usd" id="fromUsd">≈ $0.00</div>
                         </div>
-                        <div class="token-selector" id="fromTokenSelector">
-                            <img class="token-logo" id="fromTokenLogo" src="https://www.monad.xyz/favicon.ico" alt="MON">
-                            <span class="token-name" id="fromTokenName">MON</span>
-                            <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
+                        <div class="token-selector-wrapper">
+                            <div class="token-selector" id="fromTokenSelector">
+                                <img class="token-logo" id="fromTokenLogo" src="https://www.monad.xyz/favicon.ico" alt="MON">
+                                <span class="token-name" id="fromTokenName">MON</span>
+                                <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                            <div class="token-dropdown" id="fromTokenDropdown"></div>
                         </div>
                     </div>
                     <div class="quick-amounts">
@@ -1316,12 +1381,15 @@
                             <input type="text" class="token-amount" id="toAmount" value="0" placeholder="0" readonly>
                             <div class="token-usd" id="toUsd">≈ $0.00</div>
                         </div>
-                        <div class="token-selector" id="toTokenSelector">
-                            <img class="token-logo" id="toTokenLogo" src="https://assets.coingecko.com/coins/images/6319/small/usdc.png" alt="USDC">
-                            <span class="token-name" id="toTokenName">USDC</span>
-                            <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
+                        <div class="token-selector-wrapper">
+                            <div class="token-selector" id="toTokenSelector">
+                                <img class="token-logo" id="toTokenLogo" src="https://assets.coingecko.com/coins/images/6319/small/usdc.png" alt="USDC">
+                                <span class="token-name" id="toTokenName">USDC</span>
+                                <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                            <div class="token-dropdown" id="toTokenDropdown"></div>
                         </div>
                     </div>
                 </div>
@@ -1920,65 +1988,71 @@
             document.body.appendChild(modal);
         }
 
-        // ============ TOKEN SELECTOR ============
-        function showTokenModal(side) {
-            console.log('showTokenModal called with side:', side);
-            const modal = document.createElement('div');
-            modal.id = 'tokenModal';
-            modal.style.cssText = `
-                position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
-                display: flex; align-items: center; justify-content: center; z-index: 9999;
-                backdrop-filter: blur(4px);
-            `;
+        // ============ TOKEN SELECTOR (DROPDOWN) ============
+        let activeDropdown = null;
+        
+        function toggleTokenDropdown(side) {
+            const dropdownId = side === 'from' ? 'fromTokenDropdown' : 'toTokenDropdown';
+            const dropdown = document.getElementById(dropdownId);
             
-            const content = document.createElement('div');
-            content.style.cssText = `
-                background: var(--bg-card-solid); border-radius: 20px; padding: 20px;
-                min-width: 340px; max-width: 400px; border: 1px solid var(--border);
-                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            `;
+            // Close any open dropdown first
+            closeAllDropdowns();
             
-            content.innerHTML = `
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-                    <h3 style="margin:0;color:var(--text-primary);font-size:18px">Select Token</h3>
-                    <button onclick="document.getElementById('tokenModal').remove()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px">✕</button>
-                </div>
-                <div id="tokenList" style="max-height:300px;overflow-y:auto;position:relative;z-index:10001"></div>
-            `;
+            // If clicking same dropdown that was open, just close it
+            if (activeDropdown === dropdownId) {
+                activeDropdown = null;
+                return;
+            }
             
-            const list = content.querySelector('#tokenList');
+            // Populate and open dropdown
             const currentToken = side === 'from' ? fromToken : toToken;
             const otherToken = side === 'from' ? toToken : fromToken;
+            
+            dropdown.innerHTML = '';
             
             Object.values(TOKENS).forEach(token => {
                 if (token.symbol === otherToken.symbol) return; // Can't select same as other side
                 
                 const isSelected = token.symbol === currentToken.symbol;
-                const btn = document.createElement('button');
-                btn.style.cssText = `
-                    width: 100%; padding: 12px 16px; margin: 4px 0; border-radius: 12px;
-                    background: ${isSelected ? 'rgba(139, 92, 246, 0.2)' : 'var(--bg-input)'}; 
-                    border: 1px solid ${isSelected ? 'var(--purple-primary)' : 'var(--border)'};
-                    color: var(--text-primary); cursor: pointer; display: flex;
-                    align-items: center; gap: 12px; font-size: 15px; transition: all 0.15s;
-                    position: relative; z-index: 10000; pointer-events: auto;
+                const item = document.createElement('div');
+                item.className = 'token-dropdown-item' + (isSelected ? ' selected' : '');
+                item.innerHTML = `
+                    <img src="${token.logo}" onerror="this.style.background='${token.color}';this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'">
+                    <span>${token.symbol}</span>
                 `;
-                btn.innerHTML = `
-                    <img src="${token.logo}" style="width:32px;height:32px;border-radius:50%" onerror="this.style.background='${token.color}';this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'">
-                    <span style="font-weight:500">${token.symbol}</span>
-                `;
-                btn.onmouseover = () => { if (!isSelected) btn.style.borderColor = 'var(--purple-primary)'; };
-                btn.onmouseout = () => { if (!isSelected) btn.style.borderColor = 'var(--border)'; };
-                btn.onclick = () => { 
-                    selectToken(side, token); 
-                    modal.remove(); 
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    selectToken(side, token);
+                    closeAllDropdowns();
                 };
-                list.appendChild(btn);
+                dropdown.appendChild(item);
             });
             
-            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-            modal.appendChild(content);
-            document.body.appendChild(modal);
+            dropdown.classList.add('open');
+            activeDropdown = dropdownId;
+            
+            // Rotate chevron
+            const selector = document.getElementById(side + 'TokenSelector');
+            const chevron = selector.querySelector('.token-chevron');
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
+        }
+        
+        function closeAllDropdowns() {
+            document.querySelectorAll('.token-dropdown').forEach(d => d.classList.remove('open'));
+            document.querySelectorAll('.token-chevron').forEach(c => c.style.transform = '');
+            activeDropdown = null;
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.token-selector-wrapper')) {
+                closeAllDropdowns();
+            }
+        });
+        
+        // Legacy function name for compatibility
+        function showTokenModal(side) {
+            toggleTokenDropdown(side);
         }
         
         function selectToken(side, token) {

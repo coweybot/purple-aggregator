@@ -1331,9 +1331,9 @@
                             <polyline points="7 23 3 19 7 15"></polyline>
                             <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
                         </svg>
-                        1 MON ≈ 21.66 USDC
+                        <span id="rateDisplay">1 MON ≈ -- USDC</span>
                     </div>
-                    <div class="price-impact">+$1.53 better</div>
+                    <div class="price-impact" id="savingsDisplay">Calculating...</div>
                 </div>
 
                 <!-- Action Button -->
@@ -2160,6 +2160,31 @@
                 const outAmount = formatAmount(best.quote.toAmount, toToken.decimals);
                 const toAmountInput = document.getElementById('toAmount');
                 if (toAmountInput) toAmountInput.value = outAmount;
+                
+                // Update live rate display
+                const inputAmount = parseFloat(document.getElementById('fromAmount').value) || 1;
+                const outputAmount = Number(BigInt(best.quote.toAmount)) / (10 ** toToken.decimals);
+                const rate = outputAmount / inputAmount;
+                
+                const rateDisplay = document.getElementById('rateDisplay');
+                if (rateDisplay) {
+                    rateDisplay.textContent = `1 ${fromToken.symbol} ≈ ${rate.toFixed(4)} ${toToken.symbol}`;
+                }
+                
+                // Update savings display
+                const savingsDisplay = document.getElementById('savingsDisplay');
+                if (savingsDisplay && quotes.length > 1) {
+                    const worstQuote = quotes[quotes.length - 1];
+                    const bestAmount = Number(BigInt(best.quote.toAmount));
+                    const worstAmount = Number(BigInt(worstQuote.quote.toAmount));
+                    const savings = ((bestAmount - worstAmount) / worstAmount * 100).toFixed(2);
+                    const savingsUsd = ((bestAmount - worstAmount) / (10 ** toToken.decimals)).toFixed(2);
+                    savingsDisplay.textContent = savings > 0 ? `+$${savingsUsd} better` : 'Best rate';
+                    savingsDisplay.style.color = 'var(--green)';
+                } else if (savingsDisplay) {
+                    savingsDisplay.textContent = 'Best available';
+                    savingsDisplay.style.color = 'var(--green)';
+                }
             }
             
             hideLoading();

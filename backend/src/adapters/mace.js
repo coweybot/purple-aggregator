@@ -4,64 +4,120 @@ import axios from 'axios';
  * Mace Adapter (Native Monad Aggregator)
  * API Docs: https://api.mace.ag/swaps/rapidoc
  * 
- * Uses exchange-amount endpoint for quotes (no wallet required)
- * Full simulation available when user connects wallet
+ * Uses get-best-routes for detailed routing info
  */
 export default class MaceAdapter {
   constructor() {
     this.name = 'Mace';
     this.baseUrl = 'https://api.mace.ag/swaps';
+    this.exchangeCache = null;
+    this.cacheTime = 0;
+  }
+
+  async getExchangeMap() {
+    // Cache exchanges for 5 minutes
+    if (this.exchangeCache && Date.now() - this.cacheTime < 300000) {
+      return this.exchangeCache;
+    }
+    try {
+      const resp = await axios.get(`${this.baseUrl}/supported-exchanges`, { timeout: 5000 });
+      this.exchangeCache = new Map(resp.data.map(e => [e.exchange.toLowerCase(), e]));
+      this.cacheTime = Date.now();
+      return this.exchangeCache;
+    } catch {
+      return new Map();
+    }
   }
 
   async getQuote({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress }) {
     try {
-      // Use exchange-rate for quotes (doesn't require wallet simulation)
+      // Use get-best-routes with native token for detailed routing
       const response = await axios.post(
-        `${this.baseUrl}/exchange-rate`,
+        `${this.baseUrl}/get-best-routes`,
         {
-          inToken: tokenIn,
-          outToken: tokenOut,
-          lastNSeconds: 60
+          in: [{ token: 'native', amount: amount }],
+          out: [{ token: tokenOut, slippageToleranceBps: Math.round(slippage * 100) }]
         },
         {
           headers: { 'Content-Type': 'application/json' },
-          timeout: 10000
+          timeout: 8000
         }
       );
 
       const data = response.data;
       
-      if (!data.average) {
-        throw new Error('No exchange rate found');
+      if (!data.routes || data.routes.length === 0) {
+        throw new Error('No routes found');
       }
 
-      // Calculate output based on average exchange rate
-      const inputAmount = BigInt(amount);
-      const avgRate = data.average; // This is a float ratio
+      const bestRoute = data.routes[0];
+      const outputAmount = bestRoute.expectedOut?.[0]?.amount;
       
-      // Get token decimals to calculate properly (WMON 18 decimals -> USDC 6 decimals)
-      const estimatedOutput = this.calculateOutput(inputAmount, avgRate, 18, 6);
+      if (!outputAmount) {
+        throw new Error('No output amount');
+      }
+
+      // Parse route details
+      const exchangeMap = await this.getExchangeMap();
+      const routeSteps = [];
+      
+      for (const route of bestRoute.routes || []) {
+        for (const hop of route.adapterHops || []) {
+          const exchangeAddr = hop.exchange?.toLowerCase();
+          const exchangeInfo = exchangeMap.get(exchangeAddr);
+          routeSteps.push({
+            exchange: exchangeInfo?.name || `Pool ${hop.exchange?.slice(0,10)}...`,
+            brand: exchangeInfo?.brand || 'unknown',
+            adapter: route.adapter
+          });
+        }
+      }
 
       return {
-        toAmount: estimatedOutput.toString(),
-        toAmountMin: this.calculateMinOutput(estimatedOutput.toString(), slippage),
+        toAmount: BigInt(outputAmount).toString(),
+        toAmountMin: this.calculateMinOutput(BigInt(outputAmount).toString(), slippage),
         route: {
-          type: data.routeType || 'direct',
+          type: 'multi-hop',
           source: 'Mace',
-          intermediaries: data.equivilantTokens || []
+          steps: routeSteps,
+          gasConsumed: bestRoute.gasConsumed
         },
-        estimatedGas: '150000',
+        estimatedGas: bestRoute.gasConsumed?.toString() || '150000',
         priceImpact: '0',
         calldata: null,
         to: null,
         value: '0'
       };
     } catch (error) {
-      if (error.response?.data?.errorMessage) {
-        throw new Error(error.response.data.errorMessage);
-      }
-      throw error;
+      // Fallback to exchange-rate endpoint
+      return this.getFallbackQuote({ tokenIn, tokenOut, amount, slippage });
     }
+  }
+
+  async getFallbackQuote({ tokenIn, tokenOut, amount, slippage }) {
+    const response = await axios.post(
+      `${this.baseUrl}/exchange-rate`,
+      { inToken: tokenIn, outToken: tokenOut, lastNSeconds: 60 },
+      { headers: { 'Content-Type': 'application/json' }, timeout: 5000 }
+    );
+
+    const data = response.data;
+    if (!data.average) throw new Error('No exchange rate found');
+
+    const inputAmount = BigInt(amount);
+    const avgRate = data.average;
+    const estimatedOutput = this.calculateOutput(inputAmount, avgRate, 18, 6);
+
+    return {
+      toAmount: estimatedOutput.toString(),
+      toAmountMin: this.calculateMinOutput(estimatedOutput.toString(), slippage),
+      route: { type: 'direct', source: 'Mace' },
+      estimatedGas: '150000',
+      priceImpact: '0',
+      calldata: null,
+      to: null,
+      value: '0'
+    };
   }
 
   calculateOutput(inputWei, rate, inputDecimals, outputDecimals) {

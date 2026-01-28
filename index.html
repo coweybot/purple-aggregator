@@ -2150,8 +2150,16 @@
                         details: hop.poolType ? `Pool: ${hop.poolType}` : `Via ${hop.exchange}`
                     });
                 });
+            } else if (route?.steps && route.steps.length > 0) {
+                // Mace detailed format: route.steps[]
+                route.steps.forEach(step => {
+                    steps.push({
+                        name: step.exchange || step.brand || 'Mace Pool',
+                        details: step.brand ? `Brand: ${step.brand}` : 'Via Mace'
+                    });
+                });
             } else if (route?.type === 'direct' || route?.source) {
-                // Mace format: direct swap
+                // Mace fallback format: direct swap
                 steps.push({
                     name: route.source || quote.aggregator,
                     details: 'Direct swap'

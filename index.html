@@ -2323,12 +2323,11 @@
                     savingsDisplay.style.color = 'var(--green)';
                 }
                 
-                // Update USD values
-                const inputAmount = parseFloat(document.getElementById('fromAmount').value) || 0;
+                // Update USD values (reuse inputAmount and outputAmount from above)
                 const toAmountRaw = best.quote.toAmount || '0';
-                const outputAmount = Number(toAmountRaw) / (10 ** toToken.decimals);
+                const outputAmountUsd = Number(toAmountRaw) / (10 ** toToken.decimals);
                 
-                console.log('USD calc:', { inputAmount, toAmountRaw, outputAmount, toDecimals: toToken.decimals });
+                console.log('USD calc:', { inputAmount, toAmountRaw, outputAmountUsd, toDecimals: toToken.decimals });
                 
                 // Calculate USD values (assume USDC/USDT = $1)
                 const fromUsdEl = document.getElementById('fromUsd');
@@ -2341,7 +2340,7 @@
                 if (fromUsdEl) {
                     if (isOutputStable) {
                         // Output is stable, so output amount ≈ USD value of input
-                        const usdValue = outputAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const usdValue = outputAmountUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         fromUsdEl.textContent = `≈ $${usdValue}`;
                     } else if (isInputStable) {
                         // Input is stable
@@ -2354,7 +2353,7 @@
                 
                 if (toUsdEl) {
                     if (isOutputStable) {
-                        const usdValue = outputAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        const usdValue = outputAmountUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                         toUsdEl.textContent = `≈ $${usdValue}`;
                     } else if (isInputStable) {
                         const usdValue = inputAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

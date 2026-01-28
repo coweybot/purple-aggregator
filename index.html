@@ -1315,13 +1315,13 @@
                 <div class="swap-header">
                     <h1 class="swap-title">Swap</h1>
                     <div class="swap-settings">
-                        <button class="settings-btn">
+                        <button class="settings-btn" id="refreshBtn" title="Refresh quotes">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="1 4 1 10 7 10"></polyline>
                                 <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                             </svg>
                         </button>
-                        <button class="settings-btn">
+                        <button class="settings-btn" id="settingsBtn" title="Slippage settings">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="3"></circle>
                                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -2553,6 +2553,134 @@
 
         function hideLoading() {}
 
+        // ============ SETTINGS MODAL ============
+        let currentSlippage = 0.5; // Default 0.5%
+        
+        function showSettingsModal() {
+            const modal = document.createElement('div');
+            modal.id = 'settingsModal';
+            modal.style.cssText = `
+                position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
+                display: flex; align-items: center; justify-content: center; z-index: 9999;
+                backdrop-filter: blur(4px);
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: var(--bg-card-solid); border-radius: 20px; padding: 24px;
+                min-width: 320px; max-width: 380px; border: 1px solid var(--border);
+                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            `;
+            
+            content.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                    <h3 style="margin:0;color:var(--text-primary);font-size:18px">Settings</h3>
+                    <button onclick="document.getElementById('settingsModal').remove()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px">✕</button>
+                </div>
+                <div style="margin-bottom:16px">
+                    <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">Max Slippage</div>
+                    <div style="display:flex;gap:8px;margin-bottom:12px">
+                        <button class="slippage-btn ${currentSlippage === 0.1 ? 'active' : ''}" data-slippage="0.1">0.1%</button>
+                        <button class="slippage-btn ${currentSlippage === 0.5 ? 'active' : ''}" data-slippage="0.5">0.5%</button>
+                        <button class="slippage-btn ${currentSlippage === 1 ? 'active' : ''}" data-slippage="1">1%</button>
+                        <button class="slippage-btn ${currentSlippage === 'auto' ? 'active' : ''}" data-slippage="auto">Auto</button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <span style="color:var(--text-secondary);font-size:13px">Custom:</span>
+                        <input type="number" id="customSlippage" placeholder="0.5" step="0.1" min="0.01" max="50" 
+                            value="${typeof currentSlippage === 'number' ? currentSlippage : ''}"
+                            style="flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;
+                            padding:10px 12px;color:var(--text-primary);font-size:14px;outline:none">
+                        <span style="color:var(--text-secondary)">%</span>
+                    </div>
+                </div>
+                <button id="saveSettingsBtn" style="width:100%;padding:14px;background:var(--purple-primary);color:white;
+                    border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s">
+                    Save Settings
+                </button>
+            `;
+            
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // Add slippage button handlers
+            content.querySelectorAll('.slippage-btn').forEach(btn => {
+                btn.style.cssText = `
+                    flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);
+                    background:${btn.classList.contains('active') ? 'var(--purple-primary)' : 'var(--bg-input)'};
+                    color:${btn.classList.contains('active') ? 'white' : 'var(--text-primary)'};
+                    cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s;
+                `;
+                btn.onclick = () => {
+                    content.querySelectorAll('.slippage-btn').forEach(b => {
+                        b.style.background = 'var(--bg-input)';
+                        b.style.color = 'var(--text-primary)';
+                        b.classList.remove('active');
+                    });
+                    btn.style.background = 'var(--purple-primary)';
+                    btn.style.color = 'white';
+                    btn.classList.add('active');
+                    const val = btn.dataset.slippage;
+                    document.getElementById('customSlippage').value = val === 'auto' ? '' : val;
+                };
+            });
+            
+            // Save button handler
+            document.getElementById('saveSettingsBtn').onclick = () => {
+                const customInput = document.getElementById('customSlippage').value;
+                const activeBtn = content.querySelector('.slippage-btn.active');
+                
+                if (customInput && parseFloat(customInput) > 0) {
+                    currentSlippage = parseFloat(customInput);
+                } else if (activeBtn?.dataset.slippage === 'auto') {
+                    currentSlippage = 'auto';
+                } else if (activeBtn) {
+                    currentSlippage = parseFloat(activeBtn.dataset.slippage);
+                }
+                
+                // Update slippage display
+                const slippageEl = document.getElementById('slippageValue');
+                if (slippageEl) {
+                    slippageEl.textContent = currentSlippage === 'auto' ? 'Auto' : currentSlippage + '%';
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('slippage', currentSlippage);
+                
+                modal.remove();
+                
+                // Refetch quotes with new slippage
+                const amount = document.getElementById('fromAmount').value;
+                if (amount && parseFloat(amount) > 0) {
+                    fetchQuotes(amount);
+                }
+            };
+        }
+        
+        function refreshQuotes() {
+            const btn = document.getElementById('refreshBtn');
+            if (btn) {
+                btn.style.transform = 'rotate(360deg)';
+                btn.style.transition = 'transform 0.5s ease';
+                setTimeout(() => {
+                    btn.style.transform = '';
+                    btn.style.transition = '';
+                }, 500);
+            }
+            
+            const amount = document.getElementById('fromAmount').value;
+            if (amount && parseFloat(amount) > 0) {
+                fetchQuotes(amount);
+            }
+        }
+        
+        // Load saved slippage
+        const savedSlippage = localStorage.getItem('slippage');
+        if (savedSlippage) {
+            currentSlippage = savedSlippage === 'auto' ? 'auto' : parseFloat(savedSlippage);
+        }
+
         // ============ INPUT HANDLING ============
         function onAmountChange(e) {
             clearTimeout(debounceTimer);
@@ -2664,6 +2792,24 @@
                 swapDirBtn.addEventListener('click', (e) => {
                     e.preventDefault();
                     swapTokenDirection();
+                });
+            }
+            
+            // Refresh button
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    refreshQuotes();
+                });
+            }
+            
+            // Settings button
+            const settingsBtn = document.getElementById('settingsBtn');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showSettingsModal();
                 });
             }
             

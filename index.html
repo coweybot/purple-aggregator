@@ -1275,7 +1275,7 @@
                             <input type="text" inputmode="decimal" class="token-amount" value="1" placeholder="0" id="fromAmount" autocomplete="off">
                             <div class="token-usd">≈ $5,847.99</div>
                         </div>
-                        <div class="token-selector" id="fromTokenSelector" onclick="showTokenModal('from')">
+                        <div class="token-selector" id="fromTokenSelector">
                             <img class="token-logo" id="fromTokenLogo" src="https://www.monad.xyz/favicon.ico" alt="MON">
                             <span class="token-name" id="fromTokenName">MON</span>
                             <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1312,7 +1312,7 @@
                             <input type="text" class="token-amount" id="toAmount" value="0" placeholder="0" readonly>
                             <div class="token-usd" id="toUsd">≈ $0.00</div>
                         </div>
-                        <div class="token-selector" id="toTokenSelector" onclick="showTokenModal('to')">
+                        <div class="token-selector" id="toTokenSelector">
                             <img class="token-logo" id="toTokenLogo" src="https://assets.coingecko.com/coins/images/6319/small/usdc.png" alt="USDC">
                             <span class="token-name" id="toTokenName">USDC</span>
                             <svg class="token-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1785,6 +1785,7 @@
 
         // ============ TOKEN SELECTOR ============
         function showTokenModal(side) {
+            console.log('showTokenModal called with side:', side);
             const modal = document.createElement('div');
             modal.id = 'tokenModal';
             modal.style.cssText = `
@@ -2181,6 +2182,22 @@
             if (tokenNames.length >= 2) {
                 tokenNames[0].textContent = fromToken.symbol;
                 tokenNames[1].textContent = toToken.symbol;
+            }
+            
+            // Add click handlers for token selectors (backup)
+            const fromSelector = document.getElementById('fromTokenSelector');
+            const toSelector = document.getElementById('toTokenSelector');
+            if (fromSelector) {
+                fromSelector.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showTokenModal('from');
+                });
+            }
+            if (toSelector) {
+                toSelector.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showTokenModal('to');
+                });
             }
 
             // Setup wallet event listeners for connected provider

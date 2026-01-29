@@ -2056,7 +2056,8 @@
                 const balance = walletBalances[fromToken.symbol];
                 if (balance !== undefined) {
                     const bal = Number(balance) / (10 ** fromToken.decimals);
-                    const decimals = fromToken.decimals <= 6 ? 2 : 4;
+                    // Show more decimals for small balances
+                    const decimals = bal < 0.01 ? 6 : (bal < 1 ? 4 : 4);
                     fromBalanceEl.textContent = bal.toFixed(decimals) + ' ' + fromToken.symbol;
                 } else {
                     fromBalanceEl.textContent = '0 ' + fromToken.symbol;
@@ -2069,7 +2070,8 @@
                 const balance = walletBalances[toToken.symbol];
                 if (balance !== undefined) {
                     const bal = Number(balance) / (10 ** toToken.decimals);
-                    const decimals = toToken.decimals <= 6 ? 2 : 4;
+                    // Show more decimals for small balances
+                    const decimals = bal < 0.01 ? 6 : (bal < 1 ? 4 : 4);
                     toBalanceEl.textContent = bal.toFixed(decimals) + ' ' + toToken.symbol;
                 } else {
                     toBalanceEl.textContent = '0 ' + toToken.symbol;

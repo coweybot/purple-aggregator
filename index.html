@@ -1459,7 +1459,7 @@
                 <svg class="stat-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                 </svg>
-                <span class="stat-item-value">$2.4B+</span>
+                <span class="stat-item-value" id="statTotalVolume">$0</span>
                 <span class="stat-item-label">Total Volume</span>
             </div>
             <div class="stat-item">
@@ -1469,14 +1469,14 @@
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
-                <span class="stat-item-value">142K+</span>
+                <span class="stat-item-value" id="statUsers">0</span>
                 <span class="stat-item-label">Users</span>
             </div>
             <div class="stat-item">
                 <svg class="stat-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                 </svg>
-                <span class="stat-item-value">1.2M+</span>
+                <span class="stat-item-value" id="statTransactions">0</span>
                 <span class="stat-item-label">Transactions</span>
             </div>
             <div class="stat-item">
@@ -1484,7 +1484,7 @@
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
-                <span class="stat-item-value">99.9%</span>
+                <span class="stat-item-value" id="statUptime">99.9%</span>
                 <span class="stat-item-label">Uptime</span>
             </div>
         </div>
@@ -1685,13 +1685,18 @@
 
             <!-- Right Panel -->
             <div class="right-panel">
-                <!-- Savings Card -->
+                <!-- Savings Cards -->
                 <div class="savings-card">
                     <div class="savings-header">
-                        <span class="savings-label">Your Total Savings</span>
-                        <span class="savings-period">This month</span>
+                        <span class="savings-label">Today's Savings</span>
                     </div>
-                    <div class="savings-value">+$147.52</div>
+                    <div class="savings-value" id="todaysSavings">+$0.00</div>
+                </div>
+                <div class="savings-card" style="margin-top:12px">
+                    <div class="savings-header">
+                        <span class="savings-label">Your Total Savings</span>
+                    </div>
+                    <div class="savings-value" id="totalSavings">+$0.00</div>
                 </div>
 
                 <!-- Routes Card -->

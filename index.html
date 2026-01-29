@@ -2853,10 +2853,11 @@
                         <span style="color:var(--text-secondary)">%</span>
                     </div>
                 </div>
-                <button id="saveSettingsBtn" style="width:100%;padding:14px;background:var(--purple-primary);color:white;
-                    border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s">
+                <div id="saveSettingsBtn" style="width:100%;padding:14px;background:var(--purple-primary);color:white;
+                    border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s;text-align:center;
+                    -webkit-tap-highlight-color:rgba(255,255,255,0.2);user-select:none;-webkit-user-select:none">
                     Save Settings
-                </button>
+                </div>
             `;
             
             modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
@@ -2891,8 +2892,11 @@
             
             // Save button handler
             const saveBtn = document.getElementById('saveSettingsBtn');
+            let saveTouched = false; // Prevent double-fire
             const handleSave = (e) => {
+                if (saveTouched && e.type === 'click') return; // Skip click after touch
                 e.preventDefault();
+                e.stopPropagation();
                 const customInput = document.getElementById('customSlippage').value;
                 const activeBtn = content.querySelector('.slippage-btn.active');
                 
@@ -2922,7 +2926,10 @@
                 }
             };
             saveBtn.onclick = handleSave;
-            saveBtn.ontouchend = handleSave;
+            saveBtn.addEventListener('touchstart', (e) => {
+                saveTouched = true;
+                handleSave(e);
+            }, { passive: false });
         }
         
         function refreshQuotes() {

@@ -31,11 +31,15 @@ export default class MaceAdapter {
 
   async getQuote({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress }) {
     try {
-      // Use get-best-routes with native token for detailed routing
+      // WMON address - use 'native' for native MON swaps
+      const WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
+      const inToken = tokenIn.toLowerCase() === WMON.toLowerCase() ? 'native' : tokenIn;
+      
+      // Use get-best-routes with actual tokenIn for detailed routing
       const response = await axios.post(
         `${this.baseUrl}/get-best-routes`,
         {
-          in: [{ token: 'native', amount: amount }],
+          in: [{ token: inToken, amount: amount }],
           out: [{ token: tokenOut, slippageToleranceBps: Math.round(slippage * 100) }]
         },
         {

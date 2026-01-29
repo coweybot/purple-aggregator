@@ -15,7 +15,22 @@ export default class MonorailAdapter {
     this.NATIVE_ADDRESS = '0x0000000000000000000000000000000000000000';
   }
 
-  async getQuote({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress, decimals = 18 }) {
+  // Token decimals map (Monad mainnet)
+  static TOKEN_DECIMALS = {
+    '0x3bd359c1119da7da1d913d1c4d2b7c461115433a': 18, // WMON
+    '0x754704bc059f8c67012fed69bc8a327a5aafb603': 6,  // USDC
+    '0x00000000efe302beaa2b3e6e1b18d08d69a9012a': 18, // AUSD
+    '0xe7cd86e13ac4309349f30b3435a9d337750fc82d': 6,  // USDT
+    '0xee8c0e9f1bffb4eb878d8f15f368a02a35481242': 18, // WETH
+    '0x0555e30da8f98308edb960aa94c0db47230d2b9c': 8,  // WBTC
+    '0xea17e5a9efebf1477db45082d67010e2245217f1': 9,  // SOL
+  };
+
+  getDecimals(tokenAddress) {
+    return MonorailAdapter.TOKEN_DECIMALS[tokenAddress.toLowerCase()] || 18;
+  }
+
+  async getQuote({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress }) {
     try {
       // Monorail uses 0x0...0 for native MON
       const fromToken = tokenIn.toLowerCase() === this.WMON.toLowerCase() 
@@ -24,6 +39,9 @@ export default class MonorailAdapter {
       const toToken = tokenOut.toLowerCase() === this.WMON.toLowerCase()
         ? this.NATIVE_ADDRESS
         : tokenOut;
+      
+      // Get correct decimals for the input token
+      const decimals = this.getDecimals(tokenIn);
       
       // Monorail uses human-readable amounts (not wei!)
       const humanAmount = Number(amount) / (10 ** decimals);

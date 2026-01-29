@@ -1966,7 +1966,8 @@
             connectBtns.forEach(btn => {
                 btn.textContent = shortAddr;
                 btn.classList.add('connected');
-                btn.onclick = () => showWalletMenu(btn);
+                btn.setAttribute('onclick', '');
+                btn.onclick = function() { showWalletMenu(this); };
             });
             
             if (actionBtn && walletAddress) {
@@ -2040,8 +2041,12 @@
         
         function switchWallet() {
             document.getElementById('walletMenu')?.remove();
-            disconnectWallet();
-            setTimeout(() => connectWallet(), 100);
+            // Disconnect first
+            walletAddress = null;
+            selectedProvider = null;
+            walletBalances = {};
+            // Then immediately open wallet selector
+            setTimeout(() => connectWallet(), 50);
         }
         
         function disconnectWallet() {
@@ -2053,7 +2058,8 @@
             connectBtns.forEach(btn => {
                 btn.textContent = 'Connect Wallet';
                 btn.classList.remove('connected');
-                btn.onclick = connectWallet;
+                // Reset onclick to call connectWallet
+                btn.setAttribute('onclick', 'connectWallet()');
             });
             
             const actionBtn = document.getElementById('actionBtn');

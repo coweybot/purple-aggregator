@@ -2050,12 +2050,7 @@
             const inputAmount = document.getElementById('fromAmount').value;
             const outputAmount = formatAmount(quote.toAmount, toToken.decimals);
             
-            // Show confirmation
-            if (!confirm(`Swap ${inputAmount} ${fromToken.symbol} for ~${outputAmount} ${toToken.symbol} via ${aggregator}?`)) {
-                return;
-            }
-
-            // Show pending state
+            // Show pending state (wallet will handle final confirmation)
             showToast('Building transaction...', 'info');
             const swapBtn = document.querySelector('.swap-btn');
             const originalText = swapBtn.innerHTML;

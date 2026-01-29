@@ -2049,8 +2049,12 @@
             `;
             
             menu.innerHTML = `
-                <div onclick="copyAddress()" style="padding: 12px 16px; border-bottom: 1px solid rgba(147, 51, 234, 0.2); font-size: 11px; color: #aaa; cursor: pointer; word-break: break-all;" title="Click to copy">
-                    ${walletAddress}
+                <div onclick="copyAddress()" style="padding: 12px 16px; border-bottom: 1px solid rgba(147, 51, 234, 0.2); font-size: 11px; color: #aaa; cursor: pointer; word-break: break-all; display: flex; align-items: center; gap: 8px;" title="Click to copy">
+                    <span style="flex:1">${walletAddress}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;opacity:0.7">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
                 </div>
                 <button onclick="disconnectWallet()" style="width: 100%; padding: 12px 16px; background: none; border: none; color: #ef4444; text-align: left; cursor: pointer; font-size: 14px;">
                     Disconnect

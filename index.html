@@ -3080,7 +3080,7 @@
             const pageItems = transactionHistory.slice(startIdx, startIdx + HISTORY_PER_PAGE);
             
             let html = pageItems.map(tx => {
-                const explorerUrl = tx.txHash ? `https://testnet.monadvision.com/tx/${tx.txHash}` : null;
+                const explorerUrl = tx.txHash ? `https://explorer.monad.xyz/tx/${tx.txHash}` : null;
                 return `
                 <div style="padding:16px;margin-bottom:12px;background:var(--bg-input);border-radius:12px;border:1px solid var(--border)">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">

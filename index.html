@@ -2352,16 +2352,17 @@
                         const mainDex = sorted[0];
                         steps.push({
                             name: mainDex.dex,
-                            details: dexes.length > 1 ? `Split: ${dexes.map(d => `${d.dex} (${d.percentage}%)`).join(', ')}` : `Via ${mainDex.dex}`
+                            details: `Pool: ${mainDex.dex}`
                         });
                     }
                 });
             } else if (Array.isArray(route) && route[0]?.[0]?.exchange) {
                 // KyberSwap format: route[][] with exchange field
                 route[0].forEach(hop => {
+                    const name = hop.exchange || hop.poolType || 'Pool';
                     steps.push({
-                        name: hop.exchange || 'Unknown',
-                        details: `Via ${hop.exchange || hop.poolType || 'Pool'}`
+                        name: name,
+                        details: `Pool: ${name}`
                     });
                 });
             } else if (route?.steps && route.steps.length > 0) {
@@ -2370,20 +2371,21 @@
                     const name = step.exchange || step.brand || 'Mace Pool';
                     steps.push({
                         name: name,
-                        details: `Via ${name}`
+                        details: `Pool: ${name}`
                     });
                 });
             } else if (route?.type === 'direct' || route?.source) {
                 // Mace fallback format: direct swap
+                const name = route.source || quote.aggregator;
                 steps.push({
-                    name: route.source || quote.aggregator,
-                    details: quote.aggregator === 'Mace' ? 'Connect wallet for detailed route' : 'Direct swap'
+                    name: name,
+                    details: `Pool: ${name}`
                 });
             }
             
             // If no steps parsed, show simple route
             if (steps.length === 0) {
-                steps.push({ name: quote.aggregator, details: 'Direct swap' });
+                steps.push({ name: quote.aggregator, details: `Pool: ${quote.aggregator}` });
             }
             
             // Build route HTML

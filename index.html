@@ -2408,6 +2408,28 @@
                     name: name,
                     pool: name
                 });
+            } else if (Array.isArray(route) && route[0]?.dex) {
+                // 0x format: route[] with dex/from/to/proportion
+                route.forEach(fill => {
+                    steps.push({
+                        name: fill.dex || fill.source || '0x',
+                        pool: fill.dex || fill.source || '0x Pool'
+                    });
+                });
+            } else if (quote?.raw?.routes && Array.isArray(quote.raw.routes)) {
+                // Monorail format: raw.routes[][] with splits[].protocol
+                quote.raw.routes.forEach(routeGroup => {
+                    routeGroup.forEach(hop => {
+                        if (hop.splits && hop.splits.length > 0) {
+                            hop.splits.forEach(split => {
+                                steps.push({
+                                    name: split.protocol || 'Monorail',
+                                    pool: split.protocol || 'Direct'
+                                });
+                            });
+                        }
+                    });
+                });
             }
             
             // If no steps parsed, show simple route

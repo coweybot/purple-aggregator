@@ -2159,13 +2159,13 @@
                 return;
             }
             
-            // Check for WMON <-> MON swap (should be wrap/unwrap, not swap)
-            const WMON_ADDR = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A'.toLowerCase();
+            // Check for WMON <-> MON swap (wrap/unwrap operation)
+            const WMON_ADDR = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
             const isWmonToMon = fromToken.symbol === 'WMON' && toToken.address === 'native';
             const isMonToWmon = fromToken.address === 'native' && toToken.symbol === 'WMON';
             
             if (isWmonToMon || isMonToWmon) {
-                showToast('Use wrap/unwrap for MON ↔ WMON conversions (coming soon)', 'info');
+                await executeWrapUnwrap(isMonToWmon);
                 return;
             }
 
@@ -2307,6 +2307,106 @@
         }
 
         // Check ERC20 allowance
+        // Wrap MON to WMON or Unwrap WMON to MON
+        async function executeWrapUnwrap(isWrap) {
+            const WMON_ADDR = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
+            const inputAmount = document.getElementById('fromAmount').value;
+            
+            if (!inputAmount || parseFloat(inputAmount) <= 0) {
+                showToast('Enter an amount', 'error');
+                return;
+            }
+            
+            const amountWei = parseAmount(inputAmount, 18);
+            
+            const swapBtn = document.querySelector('.swap-btn');
+            const originalText = swapBtn.innerHTML;
+            
+            try {
+                if (isWrap) {
+                    // Wrap: Call deposit() on WMON contract with MON value
+                    showToast('Wrapping MON to WMON...', 'info');
+                    swapBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> Wrapping...</span>';
+                    swapBtn.disabled = true;
+                    
+                    // deposit() function selector: 0xd0e30db0
+                    const txHash = await window.ethereum.request({
+                        method: 'eth_sendTransaction',
+                        params: [{
+                            from: walletAddress,
+                            to: WMON_ADDR,
+                            data: '0xd0e30db0', // deposit()
+                            value: '0x' + BigInt(amountWei).toString(16),
+                            gas: '0x1D4C0' // 120000
+                        }]
+                    });
+                    
+                    showToast(`Wrapped! TX: ${txHash.slice(0,10)}...`, 'success', 8000);
+                    
+                    // Add to history
+                    addToHistory({
+                        fromAmount: inputAmount,
+                        fromSymbol: 'MON',
+                        toAmount: inputAmount,
+                        toSymbol: 'WMON',
+                        aggregator: 'Wrap',
+                        txHash: txHash,
+                        timestamp: Date.now(),
+                        status: 'success'
+                    });
+                    
+                } else {
+                    // Unwrap: Call withdraw(amount) on WMON contract
+                    showToast('Unwrapping WMON to MON...', 'info');
+                    swapBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> Unwrapping...</span>';
+                    swapBtn.disabled = true;
+                    
+                    // withdraw(uint256) function selector: 0x2e1a7d4d
+                    const amountHex = BigInt(amountWei).toString(16).padStart(64, '0');
+                    const txHash = await window.ethereum.request({
+                        method: 'eth_sendTransaction',
+                        params: [{
+                            from: walletAddress,
+                            to: WMON_ADDR,
+                            data: '0x2e1a7d4d' + amountHex, // withdraw(amount)
+                            gas: '0x1D4C0' // 120000
+                        }]
+                    });
+                    
+                    showToast(`Unwrapped! TX: ${txHash.slice(0,10)}...`, 'success', 8000);
+                    
+                    // Add to history
+                    addToHistory({
+                        fromAmount: inputAmount,
+                        fromSymbol: 'WMON',
+                        toAmount: inputAmount,
+                        toSymbol: 'MON',
+                        aggregator: 'Unwrap',
+                        txHash: txHash,
+                        timestamp: Date.now(),
+                        status: 'success'
+                    });
+                }
+                
+                // Refresh balances
+                await fetchBalances();
+                document.getElementById('fromAmount').value = '';
+                document.getElementById('toAmount').value = '';
+                clearQuotes();
+                
+            } catch (error) {
+                console.error('Wrap/unwrap error:', error);
+                if (error.code === 4001) {
+                    showToast('Transaction rejected', 'error');
+                } else {
+                    showToast(`Failed: ${error.message}`, 'error');
+                }
+            } finally {
+                swapBtn.innerHTML = originalText;
+                swapBtn.disabled = false;
+            }
+        }
+
         async function checkAllowance(tokenAddress, owner, spender) {
             const data = '0xdd62ed3e' + 
                 owner.slice(2).toLowerCase().padStart(64, '0') +

@@ -5,6 +5,7 @@ import axios from 'axios';
  * API Docs: https://api.mace.ag/swaps/rapidoc
  * 
  * Uses get-best-routes for detailed routing info
+ * Supports includeTransactionInfo for executable calldata
  */
 export default class MaceAdapter {
   constructor() {
@@ -12,6 +13,18 @@ export default class MaceAdapter {
     this.baseUrl = 'https://api.mace.ag/swaps';
     this.exchangeCache = null;
     this.cacheTime = 0;
+    this.routerAddress = null;
+  }
+
+  async getRouterAddress() {
+    if (this.routerAddress) return this.routerAddress;
+    try {
+      const resp = await axios.get(`${this.baseUrl}/router-address`, { timeout: 5000 });
+      this.routerAddress = resp.data;
+      return this.routerAddress;
+    } catch {
+      return null;
+    }
   }
 
   async getExchangeMap() {
@@ -95,6 +108,71 @@ export default class MaceAdapter {
     } catch (error) {
       // Fallback to exchange-rate endpoint
       return this.getFallbackQuote({ tokenIn, tokenOut, amount, slippage });
+    }
+  }
+
+  /**
+   * Get executable swap data (calldata, to, value)
+   * This is used to execute swaps directly on our frontend
+   */
+  async getSwapData({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress, recipient }) {
+    try {
+      const WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
+      const inToken = tokenIn.toLowerCase() === WMON.toLowerCase() ? 'native' : tokenIn;
+      const isNativeIn = inToken === 'native';
+      
+      // Call get-best-routes with includeTransactionInfo: true
+      const response = await axios.post(
+        `${this.baseUrl}/get-best-routes`,
+        {
+          in: [{ token: inToken, amount: amount }],
+          out: [{ token: tokenOut, slippageToleranceBps: Math.round(slippage * 100) }],
+          from: userAddress,
+          solver: {
+            includeTransactionInfo: true,
+            includeAccessList: true
+          }
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000
+        }
+      );
+
+      const data = response.data;
+      
+      if (!data.routes || data.routes.length === 0) {
+        throw new Error('No routes found');
+      }
+
+      const bestRoute = data.routes[0];
+      const outputAmount = bestRoute.expectedOut?.[0]?.amount;
+      const transaction = bestRoute.transaction;
+      
+      if (!transaction) {
+        throw new Error('No transaction data returned - try with a valid userAddress');
+      }
+
+      return {
+        success: true,
+        aggregator: 'Mace',
+        // Transaction data for wallet
+        to: transaction.to,
+        data: transaction.data,
+        value: isNativeIn ? amount : '0', // Native token value if swapping MON
+        // Quote info
+        toAmount: BigInt(outputAmount).toString(),
+        toAmountMin: this.calculateMinOutput(BigInt(outputAmount).toString(), slippage),
+        estimatedGas: bestRoute.gasConsumed?.toString() || '200000',
+        // Optional: access list for gas optimization
+        accessList: bestRoute.accessList || []
+      };
+    } catch (error) {
+      return {
+        success: false,
+        aggregator: 'Mace',
+        error: error.message
+      };
     }
   }
 

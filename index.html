@@ -2031,27 +2031,85 @@
                 return;
             }
 
-            const best = lastQuotes.bestQuote;
-            const quote = best.quote;
-            
-            // For now, show the swap details and link to the aggregator
-            // Full execution requires router contract integration
-            const aggregator = best.aggregator;
-            let swapUrl = '';
-            
-            if (aggregator === 'OpenOcean') {
-                swapUrl = `https://app.openocean.finance/MONAD/${fromToken.symbol}/${toToken.symbol}`;
-            } else if (aggregator === 'KyberSwap') {
-                swapUrl = `https://kyberswap.com/swap/monad/${fromToken.address}-to-${toToken.address}`;
-            } else if (aggregator === 'Mace') {
-                swapUrl = `https://mace.ag`;
+            if (!walletAddress) {
+                showToast('Please connect your wallet first', 'wallet');
+                return;
             }
 
-            // Show confirmation modal
+            const best = lastQuotes.bestQuote;
+            const quote = best.quote;
+            const aggregator = best.aggregator;
+            
             const inputAmount = document.getElementById('fromAmount').value;
             const outputAmount = formatAmount(quote.toAmount, toToken.decimals);
             
-            if (confirm(`Swap ${inputAmount} ${fromToken.symbol} for ~${outputAmount} ${toToken.symbol} via ${aggregator}?\n\nThis will open ${aggregator} to complete the swap.`)) {
+            // Show confirmation
+            if (!confirm(`Swap ${inputAmount} ${fromToken.symbol} for ~${outputAmount} ${toToken.symbol} via ${aggregator}?`)) {
+                return;
+            }
+
+            // Show pending state
+            showToast('Building transaction...', 'info');
+            const swapBtn = document.querySelector('.swap-btn');
+            const originalText = swapBtn.innerHTML;
+            swapBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> Building...</span>';
+            swapBtn.disabled = true;
+
+            try {
+                // Get swap data from our backend
+                const amountWei = parseAmount(inputAmount, fromToken.decimals);
+                const slippage = parseFloat(localStorage.getItem('slippage') || '0.5');
+                
+                const swapResponse = await fetch(`${API_BASE}/swap`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tokenIn: fromToken.address,
+                        tokenOut: toToken.address,
+                        amount: amountWei,
+                        slippage: slippage,
+                        userAddress: walletAddress
+                    })
+                });
+
+                const swapData = await swapResponse.json();
+                
+                if (!swapData.success) {
+                    throw new Error(swapData.error || 'Failed to build swap');
+                }
+
+                // Check if we need token approval first (for ERC20 tokens)
+                const WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
+                const isNativeSwap = fromToken.address.toLowerCase() === WMON.toLowerCase();
+                
+                if (!isNativeSwap) {
+                    // Check allowance
+                    swapBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> Checking approval...</span>';
+                    
+                    const allowance = await checkAllowance(fromToken.address, walletAddress, swapData.to);
+                    
+                    if (BigInt(allowance) < BigInt(amountWei)) {
+                        // Need approval
+                        swapBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> Approving...</span>';
+                        showToast('Please approve token spending in your wallet', 'wallet');
+                        
+                        await approveToken(fromToken.address, swapData.to, amountWei);
+                        showToast('Approval confirmed!', 'success');
+                    }
+                }
+
+                // Execute the swap
+                swapBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> Confirm in wallet...</span>';
+                showToast('Please confirm the swap in your wallet', 'wallet');
+
+                // Send transaction via wallet
+                const txHash = await sendTransaction({
+                    to: swapData.to,
+                    data: swapData.data,
+                    value: isNativeSwap ? '0x' + BigInt(amountWei).toString(16) : '0x0',
+                    gas: '0x' + (parseInt(swapData.estimatedGas) * 2).toString(16) // 2x gas buffer
+                });
+
                 // Add to history
                 addToHistory({
                     fromAmount: inputAmount,
@@ -2059,12 +2117,120 @@
                     toAmount: outputAmount,
                     toSymbol: toToken.symbol,
                     aggregator: aggregator,
-                    status: 'pending',
+                    status: 'success',
+                    txHash: txHash,
+                    timestamp: Date.now()
+                });
+
+                showToast(`Swap successful! TX: ${txHash.slice(0,10)}...`, 'success', 8000);
+                
+                // Refresh balances after a delay
+                setTimeout(() => {
+                    if (walletAddress) fetchBalances(walletAddress);
+                }, 3000);
+
+            } catch (error) {
+                console.error('Swap error:', error);
+                
+                // Add failed tx to history
+                addToHistory({
+                    fromAmount: inputAmount,
+                    fromSymbol: fromToken.symbol,
+                    toAmount: outputAmount,
+                    toSymbol: toToken.symbol,
+                    aggregator: aggregator,
+                    status: 'failed',
+                    error: error.message,
                     timestamp: Date.now()
                 });
                 
-                window.open(swapUrl, '_blank');
+                if (error.message.includes('rejected') || error.message.includes('denied')) {
+                    showToast('Transaction rejected by user', 'error');
+                } else {
+                    showToast(`Swap failed: ${error.message}`, 'error');
+                }
+            } finally {
+                swapBtn.innerHTML = originalText;
+                swapBtn.disabled = false;
             }
+        }
+
+        // Send transaction via connected wallet
+        async function sendTransaction({ to, data, value, gas }) {
+            const tx = {
+                from: walletAddress,
+                to: to,
+                data: data,
+                value: value,
+                gas: gas
+            };
+            
+            const txHash = await window.ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [tx]
+            });
+            
+            return txHash;
+        }
+
+        // Check ERC20 allowance
+        async function checkAllowance(tokenAddress, owner, spender) {
+            const data = '0xdd62ed3e' + 
+                owner.slice(2).toLowerCase().padStart(64, '0') +
+                spender.slice(2).toLowerCase().padStart(64, '0');
+            
+            const result = await window.ethereum.request({
+                method: 'eth_call',
+                params: [{ to: tokenAddress, data: data }, 'latest']
+            });
+            
+            return BigInt(result).toString();
+        }
+
+        // Approve ERC20 token spending
+        async function approveToken(tokenAddress, spender, amount) {
+            // Approve max uint256 for convenience
+            const maxApproval = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+            const data = '0x095ea7b3' + 
+                spender.slice(2).toLowerCase().padStart(64, '0') +
+                maxApproval.slice(2);
+            
+            const txHash = await window.ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                    from: walletAddress,
+                    to: tokenAddress,
+                    data: data,
+                    gas: '0x15F90' // 90000
+                }]
+            });
+            
+            // Wait for confirmation
+            await waitForTransaction(txHash);
+            return txHash;
+        }
+
+        // Wait for transaction confirmation
+        async function waitForTransaction(txHash, timeout = 60000) {
+            const start = Date.now();
+            while (Date.now() - start < timeout) {
+                try {
+                    const receipt = await window.ethereum.request({
+                        method: 'eth_getTransactionReceipt',
+                        params: [txHash]
+                    });
+                    if (receipt) {
+                        if (receipt.status === '0x0') {
+                            throw new Error('Transaction reverted');
+                        }
+                        return receipt;
+                    }
+                } catch (e) {
+                    if (e.message === 'Transaction reverted') throw e;
+                }
+                await new Promise(r => setTimeout(r, 2000));
+            }
+            throw new Error('Transaction timeout');
         }
 
         // ============ CUSTOM TOAST/MODAL ============

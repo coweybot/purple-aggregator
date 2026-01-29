@@ -2340,18 +2340,19 @@
             const toast = document.createElement('div');
             toast.id = 'customToast';
             
+            // SVG icons for clean look (no emojis)
             const icons = {
-                info: '💡',
-                error: '❌',
-                success: '✅',
-                wallet: '🔗'
+                info: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+                error: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+                success: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>',
+                wallet: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'
             };
             
             const colors = {
-                info: 'var(--purple-primary)',
+                info: '#a855f7',
                 error: '#ef4444',
-                success: '#22c55e',
-                wallet: 'var(--purple-primary)'
+                success: '#a855f7',
+                wallet: '#a855f7'
             };
             
             toast.style.cssText = `
@@ -2359,24 +2360,24 @@
                 top: 20px;
                 left: 50%;
                 transform: translateX(-50%) translateY(-100px);
-                background: var(--bg-card-solid);
-                border: 1px solid ${colors[type]};
-                border-radius: 16px;
-                padding: 16px 24px;
+                background: rgba(20, 10, 35, 0.95);
+                border: 1px solid ${colors[type]}50;
+                border-radius: 12px;
+                padding: 14px 20px;
                 display: flex;
                 align-items: center;
                 gap: 12px;
                 z-index: 10000;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 20px ${colors[type]}33;
-                backdrop-filter: blur(10px);
+                box-shadow: 0 10px 40px rgba(0,0,0,0.4), 0 0 20px ${colors[type]}20;
+                backdrop-filter: blur(20px);
                 animation: toastIn 0.3s ease forwards;
                 max-width: 90vw;
             `;
             
             toast.innerHTML = `
-                <span style="font-size:24px">${icons[type]}</span>
-                <span style="color:var(--text-primary);font-size:14px">${message}</span>
-                <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:18px;margin-left:8px">✕</button>
+                <span style="color:${colors[type]};display:flex;align-items:center">${icons[type]}</span>
+                <span style="color:#e0e0e0;font-size:13px;font-weight:500">${message}</span>
+                <button onclick="this.parentElement.remove()" style="background:none;border:none;color:#666;cursor:pointer;font-size:16px;margin-left:8px;padding:0">&times;</button>
             `;
             
             // Add animation keyframes if not exists

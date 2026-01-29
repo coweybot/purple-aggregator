@@ -3079,8 +3079,11 @@
             const startIdx = page * HISTORY_PER_PAGE;
             const pageItems = transactionHistory.slice(startIdx, startIdx + HISTORY_PER_PAGE);
             
-            let html = pageItems.map(tx => `
-                <div style="padding:16px;margin-bottom:12px;background:var(--bg-input);border-radius:12px;border:1px solid var(--border)">
+            let html = pageItems.map(tx => {
+                const explorerUrl = tx.txHash ? `https://testnet.monadvision.com/tx/${tx.txHash}` : null;
+                const clickable = explorerUrl ? `onclick="window.open('${explorerUrl}', '_blank')" style="cursor:pointer"` : '';
+                return `
+                <div ${clickable} style="padding:16px;margin-bottom:12px;background:var(--bg-input);border-radius:12px;border:1px solid var(--border);${explorerUrl ? 'cursor:pointer;transition:border-color 0.2s' : ''}" ${explorerUrl ? 'onmouseover="this.style.borderColor=\'rgba(147,51,234,0.5)\'"  onmouseout="this.style.borderColor=\'var(--border)\'"' : ''}>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                         <span style="color:var(--text-primary);font-weight:500">${tx.fromAmount} ${tx.fromSymbol} → ${tx.toAmount} ${tx.toSymbol}</span>
                         <span style="color:${getStatusColor(tx.status)};font-size:12px;font-weight:600">${tx.status}</span>
@@ -3089,8 +3092,9 @@
                         <span>via ${tx.aggregator}</span>
                         <span>${new Date(tx.timestamp).toLocaleString()}</span>
                     </div>
+                    ${explorerUrl ? `<div style="margin-top:8px;font-size:11px;color:#a855f7">🔗 Click to view on MonadVision</div>` : ''}
                 </div>
-            `).join('');
+            `}).join('');
             
             // Add pagination if needed
             if (totalPages > 1) {

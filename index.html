@@ -1697,10 +1697,21 @@
 
                 </div>
 
+                <!-- Slippage Selection - Always Visible -->
+                <div style="background:var(--bg-input);border-radius:12px;padding:12px;margin-bottom:12px;border:1px solid var(--border)">
+                    <div style="color:var(--text-secondary);font-size:11px;margin-bottom:8px">MAX SLIPPAGE</div>
+                    <div style="display:flex;gap:6px">
+                        <div class="slip-btn" onclick="setSlippage(0.1)" ontouchstart="setSlippage(0.1)" data-slip="0.1" style="flex:1;padding:8px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);text-align:center;font-size:13px;cursor:pointer">0.1%</div>
+                        <div class="slip-btn active" onclick="setSlippage(0.5)" ontouchstart="setSlippage(0.5)" data-slip="0.5" style="flex:1;padding:8px;border-radius:8px;background:var(--purple-primary);border:1px solid var(--purple-primary);color:white;text-align:center;font-size:13px;cursor:pointer">0.5%</div>
+                        <div class="slip-btn" onclick="setSlippage(1)" ontouchstart="setSlippage(1)" data-slip="1" style="flex:1;padding:8px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);text-align:center;font-size:13px;cursor:pointer">1%</div>
+                        <div class="slip-btn" onclick="setSlippage(2)" ontouchstart="setSlippage(2)" data-slip="2" style="flex:1;padding:8px;border-radius:8px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);text-align:center;font-size:13px;cursor:pointer">2%</div>
+                    </div>
+                </div>
+                
                 <!-- Stats -->
                 <div class="stats-grid">
-                    <div class="stat-card" onclick="showSettingsModal()" ontouchstart="showSettingsModal()" style="cursor:pointer">
-                        <div class="stat-label">Slippage ⚙️</div>
+                    <div class="stat-card">
+                        <div class="stat-label">Slippage</div>
                         <div class="stat-value" id="slippageValue">0.5%</div>
                     </div>
                     <div class="stat-card">
@@ -2819,41 +2830,32 @@
 
         function hideLoading() {}
 
-        // ============ SETTINGS MODAL ============
+        // ============ SLIPPAGE SETTINGS ============
         let currentSlippage = 0.5; // Default 0.5%
         
-        // Global functions for settings modal - called directly from HTML
-        window.closeSettings = function() {
-            const modal = document.getElementById('settingsModal');
-            if (modal) modal.remove();
-        };
-        
-        window.selectSlippage = function(val, btn) {
-            document.querySelectorAll('.slippage-btn').forEach(b => {
-                b.style.background = 'var(--bg-input)';
-                b.style.color = 'var(--text-primary)';
+        // Set slippage - called from inline buttons
+        window.setSlippage = function(val) {
+            currentSlippage = val;
+            
+            // Update button styles
+            document.querySelectorAll('.slip-btn').forEach(btn => {
+                if (parseFloat(btn.dataset.slip) === val) {
+                    btn.style.background = 'var(--purple-primary)';
+                    btn.style.borderColor = 'var(--purple-primary)';
+                    btn.style.color = 'white';
+                } else {
+                    btn.style.background = 'var(--bg-card)';
+                    btn.style.borderColor = 'var(--border)';
+                    btn.style.color = 'var(--text-primary)';
+                }
             });
-            btn.style.background = 'var(--purple-primary)';
-            btn.style.color = 'white';
-            const customInput = document.getElementById('customSlippage');
-            if (customInput) customInput.value = val === 'auto' ? '' : val;
-        };
-        
-        window.saveSettings = function() {
-            const customInput = document.getElementById('customSlippage')?.value;
             
-            if (customInput && parseFloat(customInput) > 0) {
-                currentSlippage = parseFloat(customInput);
-            }
-            
-            // Update slippage display
+            // Update display
             const slippageEl = document.getElementById('slippageValue');
-            if (slippageEl) {
-                slippageEl.textContent = currentSlippage === 'auto' ? 'Auto' : currentSlippage + '%';
-            }
+            if (slippageEl) slippageEl.textContent = val + '%';
             
-            localStorage.setItem('slippage', currentSlippage);
-            closeSettings();
+            // Save to localStorage
+            localStorage.setItem('slippage', val);
             
             // Refetch quotes
             const amount = document.getElementById('fromAmount')?.value;
@@ -2862,6 +2864,13 @@
             }
         };
         
+        // Load saved slippage on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('slippage');
+            if (saved) setSlippage(parseFloat(saved));
+        });
+        
+        // Legacy function - no longer needed but kept for compatibility
         function showSettingsModal() {
             // Remove existing modal if any
             const existing = document.getElementById('settingsModal');

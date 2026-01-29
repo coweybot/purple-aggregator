@@ -2391,6 +2391,20 @@
                         pool: poolName
                     });
                 });
+            } else if (quote.quote?.raw?.routes && Array.isArray(quote.quote.raw.routes[0])) {
+                // Monorail format: raw.routes[][] with splits[].protocol - CHECK FIRST
+                quote.quote.raw.routes.forEach(routeGroup => {
+                    routeGroup.forEach(hop => {
+                        if (hop.splits && hop.splits.length > 0) {
+                            hop.splits.forEach(split => {
+                                steps.push({
+                                    name: split.protocol || 'Monorail',
+                                    pool: split.protocol || 'Direct'
+                                });
+                            });
+                        }
+                    });
+                });
             } else if (route?.steps && route.steps.length > 0) {
                 // Mace detailed format: route.steps[]
                 route.steps.forEach(step => {
@@ -2414,20 +2428,6 @@
                     steps.push({
                         name: fill.dex || fill.source || '0x',
                         pool: fill.dex || fill.source || '0x Pool'
-                    });
-                });
-            } else if (quote?.raw?.routes && Array.isArray(quote.raw.routes)) {
-                // Monorail format: raw.routes[][] with splits[].protocol
-                quote.raw.routes.forEach(routeGroup => {
-                    routeGroup.forEach(hop => {
-                        if (hop.splits && hop.splits.length > 0) {
-                            hop.splits.forEach(split => {
-                                steps.push({
-                                    name: split.protocol || 'Monorail',
-                                    pool: split.protocol || 'Direct'
-                                });
-                            });
-                        }
                     });
                 });
             }

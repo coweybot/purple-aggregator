@@ -2243,6 +2243,9 @@
                     gas: '0x' + (parseInt(swapData.estimatedGas) * 2).toString(16) // 2x gas buffer
                 });
 
+                // Calculate USD value for stats
+                const usdValue = parseFloat(inputAmount) * (fromToken.usdPrice || 0);
+                
                 // Add to history
                 addToHistory({
                     fromAmount: inputAmount,
@@ -2252,7 +2255,8 @@
                     aggregator: aggregator,
                     status: 'success',
                     txHash: txHash,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    usdValue: usdValue
                 });
 
                 showToast(`Swap successful! TX: ${txHash.slice(0,10)}...`, 'success', 8000);
@@ -2352,7 +2356,8 @@
                     
                     showToast(`Wrapped! TX: ${txHash.slice(0,10)}...`, 'success', 8000);
                     
-                    // Add to history
+                    // Add to history (use MON price if available)
+                    const monPrice = TOKENS.find(t => t.symbol === 'MON')?.usdPrice || 0.10;
                     addToHistory({
                         fromAmount: inputAmount,
                         fromSymbol: 'MON',
@@ -2361,7 +2366,8 @@
                         aggregator: 'Wrap',
                         txHash: txHash,
                         timestamp: Date.now(),
-                        status: 'success'
+                        status: 'success',
+                        usdValue: parseFloat(inputAmount) * monPrice
                     });
                     
                 } else {
@@ -2384,7 +2390,8 @@
                     
                     showToast(`Unwrapped! TX: ${txHash.slice(0,10)}...`, 'success', 8000);
                     
-                    // Add to history
+                    // Add to history (use MON price if available)
+                    const wmonPrice = TOKENS.find(t => t.symbol === 'WMON')?.usdPrice || 0.10;
                     addToHistory({
                         fromAmount: inputAmount,
                         fromSymbol: 'WMON',
@@ -2393,7 +2400,8 @@
                         aggregator: 'Unwrap',
                         txHash: txHash,
                         timestamp: Date.now(),
-                        status: 'success'
+                        status: 'success',
+                        usdValue: parseFloat(inputAmount) * wmonPrice
                     });
                 }
                 
@@ -3104,10 +3112,50 @@
             historyList.innerHTML = html;
         }
 
+        // ============ STATS TRACKING ============
+        let purpleStats = JSON.parse(localStorage.getItem('purpleStats') || '{"volume":0,"users":[],"transactions":0}');
+        
+        function updateStatsDisplay() {
+            const volumeEl = document.getElementById('statTotalVolume');
+            const usersEl = document.getElementById('statUsers');
+            const txEl = document.getElementById('statTransactions');
+            
+            if (volumeEl) {
+                const vol = purpleStats.volume || 0;
+                if (vol >= 1000000) {
+                    volumeEl.textContent = '$' + (vol / 1000000).toFixed(2) + 'M';
+                } else if (vol >= 1000) {
+                    volumeEl.textContent = '$' + (vol / 1000).toFixed(2) + 'K';
+                } else {
+                    volumeEl.textContent = '$' + vol.toFixed(2);
+                }
+            }
+            if (usersEl) usersEl.textContent = (purpleStats.users || []).length;
+            if (txEl) txEl.textContent = purpleStats.transactions || 0;
+        }
+        
+        function trackSwap(usdValue, wallet) {
+            purpleStats.volume = (purpleStats.volume || 0) + usdValue;
+            purpleStats.transactions = (purpleStats.transactions || 0) + 1;
+            if (wallet && !purpleStats.users.includes(wallet.toLowerCase())) {
+                purpleStats.users.push(wallet.toLowerCase());
+            }
+            localStorage.setItem('purpleStats', JSON.stringify(purpleStats));
+            updateStatsDisplay();
+        }
+        
+        // Update stats on page load
+        updateStatsDisplay();
+
         function addToHistory(tx) {
             transactionHistory.unshift(tx);
             if (transactionHistory.length > 50) transactionHistory.pop();
             localStorage.setItem('purpleHistory', JSON.stringify(transactionHistory));
+            
+            // Track stats for successful swaps
+            if (tx.status === 'success' && tx.usdValue) {
+                trackSwap(tx.usdValue, walletAddress);
+            }
         }
 
         // ============ THEME ============

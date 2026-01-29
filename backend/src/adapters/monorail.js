@@ -49,7 +49,7 @@ export default class MonorailAdapter {
       // Slippage in basis points (50 = 0.5%)
       const slippageBps = Math.round(slippage * 100);
       
-      const url = `${this.baseUrl}/v3/quote`;
+      const url = `${this.baseUrl}/v4/quote`;
       const params = {
         amount: humanAmount,
         from: fromToken,

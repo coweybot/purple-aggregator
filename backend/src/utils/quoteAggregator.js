@@ -11,7 +11,7 @@ const adapters = [
   new KyberSwapAdapter(),
   new ZeroXAdapter(),
   new MaceAdapter(),        // Native Monad aggregator (temp down, will restart)
-  // new MonorailAdapter(),    // Disabled - mainnet API not public yet (returns 404)
+  new MonorailAdapter(),      // Native Monad aggregator (v4 API)
   new KuruAdapter(),        // Native Monad CLOB + aggregator
 ];
 

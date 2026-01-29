@@ -3,7 +3,7 @@ import KyberSwapAdapter from '../adapters/kyberswap.js';
 import ZeroXAdapter from '../adapters/zerox.js';
 import MaceAdapter from '../adapters/mace.js';
 import MonorailAdapter from '../adapters/monorail.js';
-import KuruAdapter from '../adapters/kuru.js';
+// import KuruAdapter from '../adapters/kuru.js'; // Disabled - needs auth
 
 // Active adapters
 const adapters = [
@@ -12,7 +12,7 @@ const adapters = [
   new ZeroXAdapter(),
   new MaceAdapter(),        // Native Monad aggregator (temp down, will restart)
   new MonorailAdapter(),      // Native Monad aggregator (v4 API)
-  new KuruAdapter(),        // Native Monad CLOB + aggregator
+  // new KuruAdapter(),        // Disabled - needs auth (rpc.kuru.io returns Unauthorized)
 ];
 
 /**

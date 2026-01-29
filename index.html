@@ -3339,8 +3339,9 @@
             document.querySelectorAll('.quick-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const percent = parseInt(btn.dataset.percent);
-                    if (walletAddress && walletBalances.MON) {
-                        const balance = Number(walletBalances.MON) / 1e18;
+                    const tokenBalance = walletBalances[fromToken.symbol];
+                    if (walletAddress && tokenBalance !== undefined) {
+                        const balance = Number(tokenBalance) / (10 ** fromToken.decimals);
                         const amount = (balance * percent / 100).toFixed(6);
                         document.getElementById('fromAmount').value = amount;
                         fetchQuotes(amount);

@@ -168,10 +168,18 @@ export default class MaceAdapter {
         accessList: bestRoute.accessList || []
       };
     } catch (error) {
+      // Handle common errors with user-friendly messages
+      let errorMsg = error.message;
+      if (error.response?.status === 422) {
+        errorMsg = 'No liquidity available for this token pair. Try a different token or amount.';
+      } else if (error.message.includes('No routes')) {
+        errorMsg = 'No swap route found. This token may not have liquidity on supported DEXes.';
+      }
+      
       return {
         success: false,
         aggregator: 'Mace',
-        error: error.message
+        error: errorMsg
       };
     }
   }

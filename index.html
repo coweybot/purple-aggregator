@@ -1694,6 +1694,28 @@
                     </div>
 
                 </div>
+                
+                <!-- Stats Card -->
+                <div class="routes-card" style="margin-top:16px;padding:16px">
+                    <div id="globalStatsBar" style="display:flex;justify-content:space-around;text-align:center">
+                        <div>
+                            <div style="color:#a855f7;font-weight:600;font-size:16px" id="statVolume">$0</div>
+                            <div style="color:#888;font-size:12px;margin-top:4px">Total Volume</div>
+                        </div>
+                        <div>
+                            <div style="color:#a855f7;font-weight:600;font-size:16px" id="statUsersCount">0</div>
+                            <div style="color:#888;font-size:12px;margin-top:4px">Users</div>
+                        </div>
+                        <div>
+                            <div style="color:#a855f7;font-weight:600;font-size:16px" id="statTxCount">0</div>
+                            <div style="color:#888;font-size:12px;margin-top:4px">Transactions</div>
+                        </div>
+                        <div>
+                            <div style="color:#22c55e;font-weight:600;font-size:16px">99.9%</div>
+                            <div style="color:#888;font-size:12px;margin-top:4px">Uptime</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -3122,9 +3144,9 @@
         let purpleStats = JSON.parse(localStorage.getItem('purpleStats') || '{"volume":0,"users":[],"transactions":0}');
         
         function updateStatsDisplay() {
-            const volumeEl = document.getElementById('statTotalVolume');
-            const usersEl = document.getElementById('statUsers');
-            const txEl = document.getElementById('statTransactions');
+            const volumeEl = document.getElementById('statVolume');
+            const usersEl = document.getElementById('statUsersCount');
+            const txEl = document.getElementById('statTxCount');
             
             if (volumeEl) {
                 const vol = purpleStats.volume || 0;
@@ -3393,27 +3415,7 @@
                 `;
             }).join('');
             
-            // Stats bar under routes
-            const stats = purpleStats || { volume: 0, users: [], transactions: 0 };
-            const volDisplay = stats.volume >= 1000 ? '$' + (stats.volume / 1000).toFixed(1) + 'K' : '$' + (stats.volume || 0).toFixed(2);
-            const statsBar = `
-                <div style="margin-top:12px;padding:12px;background:rgba(147,51,234,0.1);border-radius:8px;border:1px solid rgba(147,51,234,0.2);display:flex;justify-content:space-around;font-size:11px;color:#888">
-                    <div style="text-align:center">
-                        <div style="color:#a855f7;font-weight:600">${volDisplay}</div>
-                        <div>Volume</div>
-                    </div>
-                    <div style="text-align:center">
-                        <div style="color:#a855f7;font-weight:600">${(stats.users || []).length}</div>
-                        <div>Users</div>
-                    </div>
-                    <div style="text-align:center">
-                        <div style="color:#a855f7;font-weight:600">${stats.transactions || 0}</div>
-                        <div>Swaps</div>
-                    </div>
-                </div>
-            `;
-            
-            routesList.innerHTML = routesHtml + statsBar;
+            routesList.innerHTML = routesHtml;
             
             // Update output amount with best quote
             if (best) {

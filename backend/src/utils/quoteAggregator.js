@@ -2,7 +2,7 @@ import OpenOceanAdapter from '../adapters/openocean.js';
 import KyberSwapAdapter from '../adapters/kyberswap.js';
 import ZeroXAdapter from '../adapters/zerox.js';
 import MaceAdapter from '../adapters/mace.js';
-// import MonorailAdapter from '../adapters/monorail.js';
+import MonorailAdapter from '../adapters/monorail.js';
 // import KuruAdapter from '../adapters/kuru.js';
 
 // Active adapters
@@ -11,7 +11,7 @@ const adapters = [
   new KyberSwapAdapter(),
   new ZeroXAdapter(),
   new MaceAdapter(),        // Native Monad aggregator
-  // new MonorailAdapter(),  // Enable when API available
+  new MonorailAdapter(),    // Native Monad aggregator
   // new KuruAdapter(),      // Enable when API available
 ];
 

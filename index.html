@@ -3156,6 +3156,7 @@
                 const operation = isMonToWmon ? 'Wrap' : 'Unwrap';
                 lastQuotes = {
                     success: true,
+                    isWrapUnwrap: true,
                     bestQuote: {
                         aggregator: operation,
                         quote: {
@@ -3170,8 +3171,27 @@
                         route: '1:1 conversion'
                     }]
                 };
-                updateQuoteDisplay(lastQuotes);
-                document.getElementById('toAmount').value = amount; // 1:1 conversion
+                // Set output amount (1:1 conversion)
+                document.getElementById('toAmount').value = amount;
+                // Show simple route display for wrap/unwrap
+                const routesList = document.getElementById('routesList');
+                if (routesList) {
+                    routesList.innerHTML = `
+                        <div style="padding:16px;background:var(--bg-input);border-radius:12px;border:1px solid rgba(147,51,234,0.3)">
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <div style="display:flex;align-items:center;gap:12px">
+                                    <span style="color:#a855f7;font-weight:600">${operation}</span>
+                                    <span style="background:rgba(147,51,234,0.2);color:#a855f7;padding:2px 8px;border-radius:4px;font-size:11px">1:1</span>
+                                </div>
+                                <div style="text-align:right">
+                                    <div style="color:white;font-weight:600">${amount} ${toToken.symbol}</div>
+                                    <div style="color:#22c55e;font-size:12px">No fees</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                hideLoading();
                 return;
             }
             

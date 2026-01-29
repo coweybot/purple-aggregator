@@ -284,6 +284,11 @@
             gap: 12px;
             cursor: pointer;
         }
+        
+        .logo:link, .logo:visited, .logo:hover, .logo:active {
+            color: inherit;
+            text-decoration: none;
+        }
 
         .logo-icon {
             width: 40px;
@@ -1494,7 +1499,7 @@
         <!-- Header -->
         <header class="header">
             <div class="header-left">
-                <a href="/" class="logo" style="text-decoration:none;cursor:pointer">
+                <a href="/" class="logo" style="text-decoration:none;cursor:pointer;color:inherit" onmousedown="return false">
                     <div class="logo-icon">
                         <div class="logo-ring"></div>
                         <div class="logo-inner"></div>

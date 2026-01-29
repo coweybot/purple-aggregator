@@ -2360,28 +2360,32 @@
                     if (dexes.length > 0) {
                         const sorted = [...dexes].sort((a,b) => b.percentage - a.percentage);
                         const mainDex = sorted[0];
+                        // DEX name for title, pool address/name for details
+                        const poolName = mainDex.pool || mainDex.poolAddress || mainDex.dex;
                         steps.push({
                             name: mainDex.dex,
-                            details: `Pool: ${mainDex.dex}`
+                            pool: poolName
                         });
                     }
                 });
             } else if (Array.isArray(route) && route[0]?.[0]?.exchange) {
                 // KyberSwap format: route[][] with exchange field
                 route[0].forEach(hop => {
-                    const name = hop.exchange || hop.poolType || 'Pool';
+                    const dexName = hop.exchange || 'DEX';
+                    const poolName = hop.poolType || hop.pool || hop.exchange || 'Pool';
                     steps.push({
-                        name: name,
-                        details: `Pool: ${name}`
+                        name: dexName,
+                        pool: poolName
                     });
                 });
             } else if (route?.steps && route.steps.length > 0) {
                 // Mace detailed format: route.steps[]
                 route.steps.forEach(step => {
-                    const name = step.exchange || step.brand || 'Mace Pool';
+                    const dexName = step.exchange || step.brand || 'Mace';
+                    const poolName = step.pool || step.brand || dexName;
                     steps.push({
-                        name: name,
-                        details: `Pool: ${name}`
+                        name: dexName,
+                        pool: poolName
                     });
                 });
             } else if (route?.type === 'direct' || route?.source) {
@@ -2389,13 +2393,13 @@
                 const name = route.source || quote.aggregator;
                 steps.push({
                     name: name,
-                    details: `Pool: ${name}`
+                    pool: name
                 });
             }
             
             // If no steps parsed, show simple route
             if (steps.length === 0) {
-                steps.push({ name: quote.aggregator, details: `Pool: ${quote.aggregator}` });
+                steps.push({ name: quote.aggregator, pool: quote.aggregator });
             }
             
             // Build route HTML
@@ -2422,7 +2426,7 @@
                             <div style="color:var(--purple-primary);font-weight:500;font-size:13px;margin-bottom:4px">
                                 Step ${idx + 1}: ${step.name}
                             </div>
-                            <div style="color:var(--text-tertiary);font-size:11px">${step.details}</div>
+                            <div style="color:var(--text-tertiary);font-size:11px">Pool: ${step.pool}</div>
                         </div>
                     </div>
                 `;

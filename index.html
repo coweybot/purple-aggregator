@@ -2158,6 +2158,16 @@
                 showToast('Please connect your wallet first', 'wallet');
                 return;
             }
+            
+            // Check for WMON <-> MON swap (should be wrap/unwrap, not swap)
+            const WMON_ADDR = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A'.toLowerCase();
+            const isWmonToMon = fromToken.symbol === 'WMON' && toToken.address === 'native';
+            const isMonToWmon = fromToken.address === 'native' && toToken.symbol === 'WMON';
+            
+            if (isWmonToMon || isMonToWmon) {
+                showToast('Use wrap/unwrap for MON ↔ WMON conversions (coming soon)', 'info');
+                return;
+            }
 
             const best = lastQuotes.bestQuote;
             const quote = best.quote;

@@ -2619,14 +2619,29 @@
             const slippageEl = document.getElementById('slippageValue');
             const priceImpactEl = document.getElementById('priceImpactValue');
             
-            if (data.bestQuote?.quote) {
+            if (data.bestQuote?.quote && priceImpactEl) {
                 const quote = data.bestQuote.quote;
                 
-                // Update price impact if available
-                if (quote.priceImpact && priceImpactEl) {
-                    const impact = parseFloat(quote.priceImpact);
+                // Calculate price impact by comparing best vs worst quote
+                // This approximates market depth impact
+                const quotes = data.allQuotes.filter(q => q.success);
+                if (quotes.length >= 2) {
+                    const outputs = quotes.map(q => Number(q.quote.toAmount));
+                    const bestOutput = Math.max(...outputs);
+                    const worstOutput = Math.min(...outputs);
+                    
+                    // Price impact = difference between best and worst route
+                    // This shows how much the trade affects price across venues
+                    const impact = ((bestOutput - worstOutput) / bestOutput) * 100;
                     priceImpactEl.textContent = impact < 0.01 ? '<0.01%' : impact.toFixed(2) + '%';
                     priceImpactEl.className = 'stat-value ' + (impact < 1 ? 'green' : impact < 3 ? '' : 'red');
+                } else if (quotes.length === 1) {
+                    // Only one quote, assume minimal impact for small trades
+                    const inputAmount = parseFloat(document.getElementById('fromAmount')?.value || '0');
+                    // Rough estimate: larger trades have more impact
+                    const estimatedImpact = Math.min(inputAmount * 0.1, 5); // Cap at 5%
+                    priceImpactEl.textContent = estimatedImpact < 0.01 ? '<0.01%' : estimatedImpact.toFixed(2) + '%';
+                    priceImpactEl.className = 'stat-value ' + (estimatedImpact < 1 ? 'green' : estimatedImpact < 3 ? '' : 'red');
                 }
             }
         }
@@ -2875,7 +2890,9 @@
             });
             
             // Save button handler
-            document.getElementById('saveSettingsBtn').onclick = () => {
+            const saveBtn = document.getElementById('saveSettingsBtn');
+            const handleSave = (e) => {
+                e.preventDefault();
                 const customInput = document.getElementById('customSlippage').value;
                 const activeBtn = content.querySelector('.slippage-btn.active');
                 
@@ -2904,6 +2921,8 @@
                     fetchQuotes(amount);
                 }
             };
+            saveBtn.onclick = handleSave;
+            saveBtn.ontouchend = handleSave;
         }
         
         function refreshQuotes() {

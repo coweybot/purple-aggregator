@@ -3,16 +3,16 @@ import KyberSwapAdapter from '../adapters/kyberswap.js';
 import ZeroXAdapter from '../adapters/zerox.js';
 import MaceAdapter from '../adapters/mace.js';
 import MonorailAdapter from '../adapters/monorail.js';
-// import KuruAdapter from '../adapters/kuru.js';
+import KuruAdapter from '../adapters/kuru.js';
 
 // Active adapters
 const adapters = [
   new OpenOceanAdapter(),
   new KyberSwapAdapter(),
   new ZeroXAdapter(),
-  new MaceAdapter(),        // Native Monad aggregator
+  new MaceAdapter(),        // Native Monad aggregator (temp down, will restart)
   // new MonorailAdapter(),    // Disabled - mainnet API not public yet (returns 404)
-  // new KuruAdapter(),      // Enable when API available
+  new KuruAdapter(),        // Native Monad CLOB + aggregator
 ];
 
 /**

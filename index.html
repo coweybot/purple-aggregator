@@ -2856,7 +2856,8 @@
                     color:${btn.classList.contains('active') ? 'white' : 'var(--text-primary)'};
                     cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s;
                 `;
-                btn.onclick = () => {
+                const handleClick = (e) => {
+                    e.preventDefault();
                     content.querySelectorAll('.slippage-btn').forEach(b => {
                         b.style.background = 'var(--bg-input)';
                         b.style.color = 'var(--text-primary)';
@@ -2866,8 +2867,11 @@
                     btn.style.color = 'white';
                     btn.classList.add('active');
                     const val = btn.dataset.slippage;
-                    document.getElementById('customSlippage').value = val === 'auto' ? '' : val;
+                    const customInput = document.getElementById('customSlippage');
+                    if (customInput) customInput.value = val === 'auto' ? '' : val;
                 };
+                btn.onclick = handleClick;
+                btn.ontouchend = handleClick;
             });
             
             // Save button handler

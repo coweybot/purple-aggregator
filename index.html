@@ -1986,9 +1986,9 @@
             menu.id = 'walletMenu';
             menu.style.cssText = `
                 position: absolute;
-                bottom: 100%;
-                right: 0;
-                margin-bottom: 8px;
+                top: 0;
+                right: 100%;
+                margin-right: 8px;
                 background: rgba(30, 20, 50, 0.98);
                 border: 1px solid rgba(147, 51, 234, 0.3);
                 border-radius: 12px;
@@ -1996,7 +1996,7 @@
                 min-width: 200px;
                 z-index: 1000;
                 backdrop-filter: blur(10px);
-                box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+                box-shadow: -4px 4px 20px rgba(0,0,0,0.3);
             `;
             
             menu.innerHTML = `

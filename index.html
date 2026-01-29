@@ -2834,7 +2834,7 @@
             content.innerHTML = `
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
                     <h3 style="margin:0;color:var(--text-primary);font-size:18px">Settings</h3>
-                    <button onclick="document.getElementById('settingsModal').remove()" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px">✕</button>
+                    <button id="closeSettingsBtn" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px;padding:8px">✕</button>
                 </div>
                 <div style="margin-bottom:16px">
                     <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">Max Slippage</div>
@@ -2863,6 +2863,18 @@
             modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
             modal.appendChild(content);
             document.body.appendChild(modal);
+            
+            // Close button handler
+            const closeBtn = document.getElementById('closeSettingsBtn');
+            let closeTouched = false;
+            const handleClose = (e) => {
+                if (closeTouched && e.type === 'click') { closeTouched = false; return; }
+                e.preventDefault();
+                e.stopPropagation();
+                modal.remove();
+            };
+            closeBtn.onclick = handleClose;
+            closeBtn.addEventListener('touchstart', (e) => { closeTouched = true; handleClose(e); }, { passive: false });
             
             // Add slippage button handlers
             content.querySelectorAll('.slippage-btn').forEach(btn => {

@@ -1527,19 +1527,15 @@
             <div class="swap-card" id="swapCard" data-panel="swap">
                 <div class="swap-header">
                     <h1 class="swap-title">Swap</h1>
-                    <div class="swap-settings">
-                        <button class="settings-btn" id="refreshBtn" title="Refresh quotes" onclick="refreshQuotes()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events:none">
-                                <polyline points="1 4 1 10 7 10"></polyline>
-                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                            </svg>
-                        </button>
-                        <button class="settings-btn" id="settingsBtn" title="Slippage settings" onclick="showSettingsModal()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="pointer-events:none">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                            </svg>
-                        </button>
+                    <div class="swap-settings" id="inlineSlippage" style="display:flex;align-items:center;gap:4px;background:var(--bg-input);border-radius:10px;padding:6px 10px;border:1px solid var(--border)">
+                        <span style="color:var(--text-tertiary);font-size:11px">Slippage:</span>
+                        <select id="slippageSelect" style="background:transparent;border:none;color:var(--text-primary);font-size:12px;font-weight:600;cursor:pointer;outline:none" onchange="updateSlippage(this.value)">
+                            <option value="0.1" style="background:#18181b">0.1%</option>
+                            <option value="0.5" selected style="background:#18181b">0.5%</option>
+                            <option value="1" style="background:#18181b">1%</option>
+                            <option value="2" style="background:#18181b">2%</option>
+                            <option value="3" style="background:#18181b">3%</option>
+                        </select>
                     </div>
                 </div>
 
@@ -2793,10 +2789,45 @@
 
         function hideLoading() {}
 
-        // ============ SETTINGS DROPDOWN ============
+        // ============ SLIPPAGE SETTINGS ============
         let currentSlippage = 0.5; // Default 0.5%
-        let settingsDropdownOpen = false;
         
+        function updateSlippage(value) {
+            currentSlippage = parseFloat(value);
+            localStorage.setItem('slippage', currentSlippage);
+            
+            // Update slippage display if exists
+            const slippageEl = document.getElementById('slippageValue');
+            if (slippageEl) {
+                slippageEl.textContent = currentSlippage + '%';
+            }
+            
+            // Refetch quotes
+            const amount = document.getElementById('fromAmount')?.value;
+            if (amount && parseFloat(amount) > 0) {
+                fetchQuotes(amount);
+            }
+        }
+        
+        // Load saved slippage on startup
+        const savedSlippageVal = localStorage.getItem('slippage');
+        if (savedSlippageVal) {
+            currentSlippage = parseFloat(savedSlippageVal);
+            // Update dropdown when DOM ready
+            document.addEventListener('DOMContentLoaded', () => {
+                const select = document.getElementById('slippageSelect');
+                if (select) select.value = currentSlippage;
+            });
+        }
+        
+        function refreshQuotesManual() {
+            const amount = document.getElementById('fromAmount')?.value;
+            if (amount && parseFloat(amount) > 0) {
+                fetchQuotes(amount);
+            }
+        }
+        
+        // Legacy function name for compatibility
         function showSettingsModal() {
             // Toggle dropdown
             const existing = document.getElementById('settingsDropdown');

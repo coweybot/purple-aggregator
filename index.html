@@ -2791,11 +2791,19 @@
             }
             
             noHistory.style.display = 'none';
+            
+            const getStatusColor = (status) => {
+                if (status === 'success') return '#22c55e';  // Green
+                if (status === 'failed') return '#ef4444';   // Red
+                if (status === 'pending') return '#f59e0b';  // Orange
+                return '#888';
+            };
+            
             historyList.innerHTML = transactionHistory.map(tx => `
                 <div style="padding:16px;margin-bottom:12px;background:var(--bg-input);border-radius:12px;border:1px solid var(--border)">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                         <span style="color:var(--text-primary);font-weight:500">${tx.fromAmount} ${tx.fromSymbol} → ${tx.toAmount} ${tx.toSymbol}</span>
-                        <span style="color:${tx.status === 'completed' ? 'var(--green)' : 'var(--orange)'};font-size:12px">${tx.status}</span>
+                        <span style="color:${getStatusColor(tx.status)};font-size:12px;font-weight:600">${tx.status}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-secondary)">
                         <span>via ${tx.aggregator}</span>

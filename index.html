@@ -1931,11 +1931,12 @@
                 });
                 walletBalances.MON = BigInt(monBalance);
 
-                // Fetch WMON balance (same as MON wrapped)
-                walletBalances.WMON = await getTokenBalance(WMON_ADDRESS);
-                
-                // Fetch USDC balance
-                walletBalances.USDC = await getTokenBalance(TOKENS.USDC.address);
+                // Fetch all token balances
+                for (const [symbol, token] of Object.entries(TOKENS)) {
+                    if (token.address !== 'native') {
+                        walletBalances[symbol] = await getTokenBalance(token.address);
+                    }
+                }
                 
                 updateBalanceDisplay();
             } catch (error) {
@@ -1973,18 +1974,30 @@
         }
 
         function updateBalanceDisplay() {
-            // Update FROM balance (MON = native balance)
+            // Update FROM balance based on selected token
             const fromBalanceEl = document.getElementById('fromBalance');
-            if (fromBalanceEl && walletBalances.MON !== undefined) {
-                const bal = Number(walletBalances.MON) / 1e18;
-                fromBalanceEl.textContent = bal.toFixed(4) + ' ' + fromToken.symbol;
+            if (fromBalanceEl && fromToken) {
+                const balance = walletBalances[fromToken.symbol];
+                if (balance !== undefined) {
+                    const bal = Number(balance) / (10 ** fromToken.decimals);
+                    const decimals = fromToken.decimals <= 6 ? 2 : 4;
+                    fromBalanceEl.textContent = bal.toFixed(decimals) + ' ' + fromToken.symbol;
+                } else {
+                    fromBalanceEl.textContent = '0 ' + fromToken.symbol;
+                }
             }
             
-            // Update TO balance
+            // Update TO balance based on selected token
             const toBalanceEl = document.getElementById('toBalance');
-            if (toBalanceEl && walletBalances.USDC !== undefined) {
-                const bal = Number(walletBalances.USDC) / 1e6;
-                toBalanceEl.textContent = bal.toFixed(2) + ' ' + toToken.symbol;
+            if (toBalanceEl && toToken) {
+                const balance = walletBalances[toToken.symbol];
+                if (balance !== undefined) {
+                    const bal = Number(balance) / (10 ** toToken.decimals);
+                    const decimals = toToken.decimals <= 6 ? 2 : 4;
+                    toBalanceEl.textContent = bal.toFixed(decimals) + ' ' + toToken.symbol;
+                } else {
+                    toBalanceEl.textContent = '0 ' + toToken.symbol;
+                }
             }
         }
 
@@ -2448,6 +2461,9 @@
                 document.getElementById('toTokenName').textContent = token.symbol;
             }
             
+            // Update balance display for new token
+            updateBalanceDisplay();
+            
             // Refetch quotes with new pair
             const amount = document.getElementById('fromAmount').value;
             if (amount && parseFloat(amount) > 0) {
@@ -2487,6 +2503,9 @@
                 btn.style.transform = 'rotate(180deg)';
                 setTimeout(() => btn.style.transform = '', 300);
             }
+            
+            // Update balance display for swapped tokens
+            updateBalanceDisplay();
             
             // Refetch quotes with new FROM amount
             const amount = fromAmountEl?.value;

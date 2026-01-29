@@ -2815,136 +2815,80 @@
         // ============ SETTINGS MODAL ============
         let currentSlippage = 0.5; // Default 0.5%
         
+        // Global functions for settings modal - called directly from HTML
+        window.closeSettings = function() {
+            const modal = document.getElementById('settingsModal');
+            if (modal) modal.remove();
+        };
+        
+        window.selectSlippage = function(val, btn) {
+            document.querySelectorAll('.slippage-btn').forEach(b => {
+                b.style.background = 'var(--bg-input)';
+                b.style.color = 'var(--text-primary)';
+            });
+            btn.style.background = 'var(--purple-primary)';
+            btn.style.color = 'white';
+            const customInput = document.getElementById('customSlippage');
+            if (customInput) customInput.value = val === 'auto' ? '' : val;
+        };
+        
+        window.saveSettings = function() {
+            const customInput = document.getElementById('customSlippage')?.value;
+            
+            if (customInput && parseFloat(customInput) > 0) {
+                currentSlippage = parseFloat(customInput);
+            }
+            
+            // Update slippage display
+            const slippageEl = document.getElementById('slippageValue');
+            if (slippageEl) {
+                slippageEl.textContent = currentSlippage === 'auto' ? 'Auto' : currentSlippage + '%';
+            }
+            
+            localStorage.setItem('slippage', currentSlippage);
+            closeSettings();
+            
+            // Refetch quotes
+            const amount = document.getElementById('fromAmount')?.value;
+            if (amount && parseFloat(amount) > 0) {
+                fetchQuotes(amount);
+            }
+        };
+        
         function showSettingsModal() {
+            // Remove existing modal if any
+            const existing = document.getElementById('settingsModal');
+            if (existing) { existing.remove(); return; }
+            
             const modal = document.createElement('div');
             modal.id = 'settingsModal';
-            modal.style.cssText = `
-                position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
-                display: flex; align-items: center; justify-content: center; z-index: 9999;
-                backdrop-filter: blur(4px);
-            `;
+            modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999`;
+            modal.setAttribute('ontouchend', 'if(event.target===this)closeSettings()');
+            modal.setAttribute('onclick', 'if(event.target===this)closeSettings()');
             
-            const content = document.createElement('div');
-            content.style.cssText = `
-                background: var(--bg-card-solid); border-radius: 20px; padding: 24px;
-                min-width: 320px; max-width: 380px; border: 1px solid var(--border);
-                box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            `;
-            
-            content.innerHTML = `
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-                    <h3 style="margin:0;color:var(--text-primary);font-size:18px">Settings</h3>
-                    <button id="closeSettingsBtn" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:20px;padding:8px">✕</button>
-                </div>
-                <div style="margin-bottom:16px">
+            modal.innerHTML = `
+                <div style="background:var(--bg-card-solid);border-radius:20px;padding:24px;min-width:300px;max-width:360px;border:1px solid var(--border)">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                        <h3 style="margin:0;color:var(--text-primary);font-size:18px">Settings</h3>
+                        <div ontouchend="closeSettings();event.stopPropagation()" onclick="closeSettings()" style="color:var(--text-secondary);cursor:pointer;font-size:24px;padding:4px 8px;line-height:1">×</div>
+                    </div>
                     <div style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">Max Slippage</div>
                     <div style="display:flex;gap:8px;margin-bottom:12px">
-                        <button class="slippage-btn ${currentSlippage === 0.1 ? 'active' : ''}" data-slippage="0.1">0.1%</button>
-                        <button class="slippage-btn ${currentSlippage === 0.5 ? 'active' : ''}" data-slippage="0.5">0.5%</button>
-                        <button class="slippage-btn ${currentSlippage === 1 ? 'active' : ''}" data-slippage="1">1%</button>
-                        <button class="slippage-btn ${currentSlippage === 'auto' ? 'active' : ''}" data-slippage="auto">Auto</button>
+                        <button class="slippage-btn" ontouchend="selectSlippage('0.1',this);event.stopPropagation()" onclick="selectSlippage('0.1',this)" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:${currentSlippage===0.1?'var(--purple-primary)':'var(--bg-input)'};color:${currentSlippage===0.1?'white':'var(--text-primary)'};cursor:pointer;font-size:13px">0.1%</button>
+                        <button class="slippage-btn" ontouchend="selectSlippage('0.5',this);event.stopPropagation()" onclick="selectSlippage('0.5',this)" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:${currentSlippage===0.5?'var(--purple-primary)':'var(--bg-input)'};color:${currentSlippage===0.5?'white':'var(--text-primary)'};cursor:pointer;font-size:13px">0.5%</button>
+                        <button class="slippage-btn" ontouchend="selectSlippage('1',this);event.stopPropagation()" onclick="selectSlippage('1',this)" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:${currentSlippage===1?'var(--purple-primary)':'var(--bg-input)'};color:${currentSlippage===1?'white':'var(--text-primary)'};cursor:pointer;font-size:13px">1%</button>
+                        <button class="slippage-btn" ontouchend="selectSlippage('auto',this);event.stopPropagation()" onclick="selectSlippage('auto',this)" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:${currentSlippage==='auto'?'var(--purple-primary)':'var(--bg-input)'};color:${currentSlippage==='auto'?'white':'var(--text-primary)'};cursor:pointer;font-size:13px">Auto</button>
                     </div>
-                    <div style="display:flex;align-items:center;gap:8px">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
                         <span style="color:var(--text-secondary);font-size:13px">Custom:</span>
-                        <input type="number" id="customSlippage" placeholder="0.5" step="0.1" min="0.01" max="50" 
-                            value="${typeof currentSlippage === 'number' ? currentSlippage : ''}"
-                            style="flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;
-                            padding:10px 12px;color:var(--text-primary);font-size:14px;outline:none">
+                        <input type="number" id="customSlippage" placeholder="0.5" step="0.1" min="0.01" max="50" value="${typeof currentSlippage==='number'?currentSlippage:''}" style="flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text-primary);font-size:14px;outline:none">
                         <span style="color:var(--text-secondary)">%</span>
                     </div>
-                </div>
-                <div id="saveSettingsBtn" style="width:100%;padding:14px;background:var(--purple-primary);color:white;
-                    border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s;text-align:center;
-                    -webkit-tap-highlight-color:rgba(255,255,255,0.2);user-select:none;-webkit-user-select:none">
-                    Save Settings
+                    <div ontouchend="saveSettings();event.stopPropagation()" onclick="saveSettings()" style="width:100%;padding:14px;background:var(--purple-primary);color:white;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;text-align:center">Save Settings</div>
                 </div>
             `;
             
-            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-            modal.appendChild(content);
             document.body.appendChild(modal);
-            
-            // Close button handler
-            const closeBtn = document.getElementById('closeSettingsBtn');
-            let closeTouched = false;
-            const handleClose = (e) => {
-                if (closeTouched && e.type === 'click') { closeTouched = false; return; }
-                e.preventDefault();
-                e.stopPropagation();
-                modal.remove();
-            };
-            closeBtn.onclick = handleClose;
-            closeBtn.addEventListener('touchstart', (e) => { closeTouched = true; handleClose(e); }, { passive: false });
-            
-            // Add slippage button handlers
-            content.querySelectorAll('.slippage-btn').forEach(btn => {
-                btn.style.cssText = `
-                    flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);
-                    background:${btn.classList.contains('active') ? 'var(--purple-primary)' : 'var(--bg-input)'};
-                    color:${btn.classList.contains('active') ? 'white' : 'var(--text-primary)'};
-                    cursor:pointer;font-size:13px;font-weight:500;transition:all 0.15s;
-                `;
-                let touched = false;
-                const handleClick = (e) => {
-                    if (touched && e.type === 'click') { touched = false; return; }
-                    e.preventDefault();
-                    e.stopPropagation();
-                    content.querySelectorAll('.slippage-btn').forEach(b => {
-                        b.style.background = 'var(--bg-input)';
-                        b.style.color = 'var(--text-primary)';
-                        b.classList.remove('active');
-                    });
-                    btn.style.background = 'var(--purple-primary)';
-                    btn.style.color = 'white';
-                    btn.classList.add('active');
-                    const val = btn.dataset.slippage;
-                    const customInput = document.getElementById('customSlippage');
-                    if (customInput) customInput.value = val === 'auto' ? '' : val;
-                };
-                btn.onclick = handleClick;
-                btn.addEventListener('touchstart', (e) => { touched = true; handleClick(e); }, { passive: false });
-            });
-            
-            // Save button handler
-            const saveBtn = document.getElementById('saveSettingsBtn');
-            let saveTouched = false; // Prevent double-fire
-            const handleSave = (e) => {
-                if (saveTouched && e.type === 'click') return; // Skip click after touch
-                e.preventDefault();
-                e.stopPropagation();
-                const customInput = document.getElementById('customSlippage').value;
-                const activeBtn = content.querySelector('.slippage-btn.active');
-                
-                if (customInput && parseFloat(customInput) > 0) {
-                    currentSlippage = parseFloat(customInput);
-                } else if (activeBtn?.dataset.slippage === 'auto') {
-                    currentSlippage = 'auto';
-                } else if (activeBtn) {
-                    currentSlippage = parseFloat(activeBtn.dataset.slippage);
-                }
-                
-                // Update slippage display
-                const slippageEl = document.getElementById('slippageValue');
-                if (slippageEl) {
-                    slippageEl.textContent = currentSlippage === 'auto' ? 'Auto' : currentSlippage + '%';
-                }
-                
-                // Save to localStorage
-                localStorage.setItem('slippage', currentSlippage);
-                
-                modal.remove();
-                
-                // Refetch quotes with new slippage
-                const amount = document.getElementById('fromAmount').value;
-                if (amount && parseFloat(amount) > 0) {
-                    fetchQuotes(amount);
-                }
-            };
-            saveBtn.onclick = handleSave;
-            saveBtn.addEventListener('touchstart', (e) => {
-                saveTouched = true;
-                handleSave(e);
-            }, { passive: false });
         }
         
         function refreshQuotes() {

@@ -2966,6 +2966,13 @@
             return num.toLocaleString('en-US', { maximumFractionDigits: 6 });
         }
 
+        function parseAmount(amount, decimals) {
+            // Convert human-readable amount to wei string
+            const [whole, fraction = ''] = amount.toString().split('.');
+            const paddedFraction = fraction.padEnd(decimals, '0').slice(0, decimals);
+            return whole + paddedFraction;
+        }
+
         function clearQuotes() {
             stopAutoRefresh(); // Stop auto-refresh when quotes are cleared
             const routesList = document.getElementById('routesList');

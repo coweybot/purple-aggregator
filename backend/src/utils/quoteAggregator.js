@@ -11,7 +11,7 @@ const adapters = [
   new KyberSwapAdapter(),
   new ZeroXAdapter(),
   new MaceAdapter(),        // Native Monad aggregator
-  new MonorailAdapter(),    // Native Monad aggregator
+  // new MonorailAdapter(),    // Disabled - mainnet API not public yet (returns 404)
   // new KuruAdapter(),      // Enable when API available
 ];
 
@@ -48,8 +48,8 @@ export async function getAllQuotes(params) {
     return cached.quotes;
   }
   
-  // Timeout per adapter (2.5 seconds max for speed)
-  const ADAPTER_TIMEOUT = 2500;
+  // Timeout per adapter (8 seconds to allow slower APIs like Mace)
+  const ADAPTER_TIMEOUT = 8000;
   
   const quotePromises = adapters.map(async (adapter) => {
     const startTime = Date.now();

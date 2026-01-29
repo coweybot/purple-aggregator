@@ -2361,15 +2361,16 @@
                 route[0].forEach(hop => {
                     steps.push({
                         name: hop.exchange || 'Unknown',
-                        details: hop.poolType ? `Pool: ${hop.poolType}` : `Via ${hop.exchange}`
+                        details: `Via ${hop.exchange || hop.poolType || 'Pool'}`
                     });
                 });
             } else if (route?.steps && route.steps.length > 0) {
                 // Mace detailed format: route.steps[]
                 route.steps.forEach(step => {
+                    const name = step.exchange || step.brand || 'Mace Pool';
                     steps.push({
-                        name: step.exchange || step.brand || 'Mace Pool',
-                        details: step.brand ? `Brand: ${step.brand}` : 'Via Mace'
+                        name: name,
+                        details: `Via ${name}`
                     });
                 });
             } else if (route?.type === 'direct' || route?.source) {

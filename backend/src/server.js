@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import quoteRoutes from './routes/quote.js';
+import swapRoutes from './routes/swap.js';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api', quoteRoutes);
+app.use('/api', swapRoutes);
 
 // Fallback to index.html for SPA routing
 app.get('*', (req, res) => {

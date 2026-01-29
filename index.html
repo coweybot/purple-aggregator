@@ -2319,6 +2319,15 @@
             
             const amountWei = parseAmount(inputAmount, 18);
             
+            // Check balance before proceeding
+            const balance = isWrap ? walletBalances.MON : walletBalances.WMON;
+            if (!balance || BigInt(balance) < BigInt(amountWei)) {
+                const symbol = isWrap ? 'MON' : 'WMON';
+                const available = balance ? (Number(balance) / 1e18).toFixed(6) : '0';
+                showToast(`Insufficient ${symbol} balance. Available: ${available}`, 'error');
+                return;
+            }
+            
             const swapBtn = document.querySelector('.swap-btn');
             const originalText = swapBtn.innerHTML;
             

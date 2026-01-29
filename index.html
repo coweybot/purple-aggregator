@@ -2004,9 +2004,6 @@
                 <div onclick="copyAddress()" style="padding: 12px 16px; border-bottom: 1px solid rgba(147, 51, 234, 0.2); font-size: 11px; color: #aaa; cursor: pointer; word-break: break-all;" title="Click to copy">
                     ${walletAddress}
                 </div>
-                <button onclick="switchWallet()" style="width: 100%; padding: 12px 16px; background: none; border: none; color: white; text-align: left; cursor: pointer; font-size: 14px;">
-                    Switch Wallet
-                </button>
                 <button onclick="disconnectWallet()" style="width: 100%; padding: 12px 16px; background: none; border: none; color: #ef4444; text-align: left; cursor: pointer; font-size: 14px;">
                     Disconnect
                 </button>
@@ -2039,40 +2036,17 @@
             document.getElementById('walletMenu')?.remove();
         }
         
-        function switchWallet() {
-            document.getElementById('walletMenu')?.remove();
-            // Disconnect first
-            walletAddress = null;
-            selectedProvider = null;
-            walletBalances = {};
-            // Then immediately open wallet selector
-            setTimeout(() => connectWallet(), 50);
-        }
-        
         function disconnectWallet() {
-            walletAddress = null;
-            selectedProvider = null;
-            walletBalances = {};
+            // Clear local storage flag if any
+            localStorage.removeItem('walletConnected');
             
-            const connectBtns = document.querySelectorAll('.connect-btn');
-            connectBtns.forEach(btn => {
-                btn.textContent = 'Connect Wallet';
-                btn.classList.remove('connected');
-                // Reset onclick to call connectWallet
-                btn.setAttribute('onclick', 'connectWallet()');
-            });
+            // Show toast then reload for clean state
+            showToast('Disconnecting...', 'info');
             
-            const actionBtn = document.getElementById('actionBtn');
-            if (actionBtn) actionBtn.textContent = 'Connect Wallet';
-            
-            // Clear balance displays
-            const fromBalanceEl = document.getElementById('fromBalance');
-            const toBalanceEl = document.getElementById('toBalance');
-            if (fromBalanceEl) fromBalanceEl.textContent = '';
-            if (toBalanceEl) toBalanceEl.textContent = '';
-            
-            document.getElementById('walletMenu')?.remove();
-            showToast('Wallet disconnected', 'info');
+            // Reload page after brief delay to show toast
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         }
 
         function updateBalanceDisplay() {

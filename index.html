@@ -3147,6 +3147,34 @@
                 return;
             }
             
+            // Handle WMON <-> MON as 1:1 wrap/unwrap (no aggregator needed)
+            const isWmonToMon = fromToken.symbol === 'WMON' && toToken.address === 'native';
+            const isMonToWmon = fromToken.address === 'native' && toToken.symbol === 'WMON';
+            
+            if (isWmonToMon || isMonToWmon) {
+                const amountWei = BigInt(Math.floor(parseFloat(amount) * 1e18)).toString();
+                const operation = isMonToWmon ? 'Wrap' : 'Unwrap';
+                lastQuotes = {
+                    success: true,
+                    bestQuote: {
+                        aggregator: operation,
+                        quote: {
+                            toAmount: amountWei,
+                            toAmountMin: amountWei
+                        }
+                    },
+                    quotes: [{
+                        aggregator: operation,
+                        toAmount: amountWei,
+                        toAmountMin: amountWei,
+                        route: '1:1 conversion'
+                    }]
+                };
+                updateQuoteDisplay(lastQuotes);
+                document.getElementById('toAmount').value = amount; // 1:1 conversion
+                return;
+            }
+            
             const amountWei = BigInt(Math.floor(parseFloat(amount) * (10 ** fromToken.decimals))).toString();
             
             // For MON (native), use WMON address for API calls

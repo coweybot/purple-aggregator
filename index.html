@@ -1624,14 +1624,18 @@
                 
                 <!-- Settings Link -->
                 <div style="text-align:center;margin-top:12px">
-                    <span onclick="showSettingsModal()" ontouchstart="showSettingsModal()" style="color:var(--text-tertiary);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;transition:all 0.15s">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="opacity:0.7">
+                    <span id="settingsLink" onclick="showSettingsModal()" ontouchstart="showSettingsModal()" style="color:var(--text-secondary);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:10px;background:var(--bg-input);border:1px solid var(--border);transition:all 0.15s">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
                         Slippage Settings
                     </span>
                 </div>
+                <style>
+                    #settingsLink:hover { background: rgba(139, 92, 246, 0.15); border-color: rgba(139, 92, 246, 0.3); color: var(--text-primary); }
+                    #settingsLink:active { transform: scale(0.98); }
+                </style>
 
                 <!-- Partners -->
                 <div class="partners-section">

@@ -1966,11 +1966,103 @@
             connectBtns.forEach(btn => {
                 btn.textContent = shortAddr;
                 btn.classList.add('connected');
+                btn.onclick = () => showWalletMenu(btn);
             });
             
             if (actionBtn && walletAddress) {
                 actionBtn.textContent = 'Swap';
             }
+        }
+        
+        function showWalletMenu(anchorBtn) {
+            // Remove existing menu if any
+            const existing = document.getElementById('walletMenu');
+            if (existing) {
+                existing.remove();
+                return;
+            }
+            
+            const menu = document.createElement('div');
+            menu.id = 'walletMenu';
+            menu.style.cssText = `
+                position: absolute;
+                top: 100%;
+                right: 0;
+                margin-top: 8px;
+                background: rgba(30, 20, 50, 0.95);
+                border: 1px solid rgba(147, 51, 234, 0.3);
+                border-radius: 12px;
+                padding: 8px 0;
+                min-width: 180px;
+                z-index: 1000;
+                backdrop-filter: blur(10px);
+            `;
+            
+            menu.innerHTML = `
+                <div style="padding: 12px 16px; border-bottom: 1px solid rgba(147, 51, 234, 0.2); font-size: 12px; color: #888;">
+                    ${walletAddress}
+                </div>
+                <button onclick="copyAddress()" style="width: 100%; padding: 12px 16px; background: none; border: none; color: white; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    📋 Copy Address
+                </button>
+                <button onclick="switchWallet()" style="width: 100%; padding: 12px 16px; background: none; border: none; color: white; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    🔄 Switch Wallet
+                </button>
+                <button onclick="disconnectWallet()" style="width: 100%; padding: 12px 16px; background: none; border: none; color: #ef4444; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    🚪 Disconnect
+                </button>
+            `;
+            
+            // Position relative to button
+            anchorBtn.style.position = 'relative';
+            anchorBtn.appendChild(menu);
+            
+            // Close on click outside
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu(e) {
+                    if (!menu.contains(e.target) && e.target !== anchorBtn) {
+                        menu.remove();
+                        document.removeEventListener('click', closeMenu);
+                    }
+                });
+            }, 10);
+        }
+        
+        function copyAddress() {
+            navigator.clipboard.writeText(walletAddress);
+            showToast('Address copied!', 'success');
+            document.getElementById('walletMenu')?.remove();
+        }
+        
+        function switchWallet() {
+            document.getElementById('walletMenu')?.remove();
+            disconnectWallet();
+            setTimeout(() => connectWallet(), 100);
+        }
+        
+        function disconnectWallet() {
+            walletAddress = null;
+            selectedProvider = null;
+            walletBalances = {};
+            
+            const connectBtns = document.querySelectorAll('.connect-btn');
+            connectBtns.forEach(btn => {
+                btn.textContent = 'Connect Wallet';
+                btn.classList.remove('connected');
+                btn.onclick = connectWallet;
+            });
+            
+            const actionBtn = document.getElementById('actionBtn');
+            if (actionBtn) actionBtn.textContent = 'Connect Wallet';
+            
+            // Clear balance displays
+            const fromBalanceEl = document.getElementById('fromBalance');
+            const toBalanceEl = document.getElementById('toBalance');
+            if (fromBalanceEl) fromBalanceEl.textContent = '';
+            if (toBalanceEl) toBalanceEl.textContent = '';
+            
+            document.getElementById('walletMenu')?.remove();
+            showToast('Wallet disconnected', 'info');
         }
 
         function updateBalanceDisplay() {

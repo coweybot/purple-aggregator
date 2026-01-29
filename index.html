@@ -1685,18 +1685,19 @@
 
             <!-- Right Panel -->
             <div class="right-panel">
-                <!-- Savings Cards -->
+                <!-- Savings Card -->
                 <div class="savings-card">
-                    <div class="savings-header">
-                        <span class="savings-label">Today's Savings</span>
+                    <div style="display:flex;justify-content:space-between;gap:20px">
+                        <div style="flex:1;text-align:center">
+                            <div class="savings-label">Today's Savings</div>
+                            <div class="savings-value" id="todaysSavings">+$0.00</div>
+                        </div>
+                        <div style="width:1px;background:var(--border)"></div>
+                        <div style="flex:1;text-align:center">
+                            <div class="savings-label">Your Total Savings</div>
+                            <div class="savings-value" id="totalSavings">+$0.00</div>
+                        </div>
                     </div>
-                    <div class="savings-value" id="todaysSavings">+$0.00</div>
-                </div>
-                <div class="savings-card" style="margin-top:12px">
-                    <div class="savings-header">
-                        <span class="savings-label">Your Total Savings</span>
-                    </div>
-                    <div class="savings-value" id="totalSavings">+$0.00</div>
                 </div>
 
                 <!-- Routes Card -->

@@ -2062,12 +2062,17 @@
                 const amountWei = parseAmount(inputAmount, fromToken.decimals);
                 const slippage = parseFloat(localStorage.getItem('slippage') || '0.5');
                 
+                // Convert 'native' to WMON address for API calls
+                const WMON_ADDRESS = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
+                const tokenInAddress = fromToken.address === 'native' ? WMON_ADDRESS : fromToken.address;
+                const tokenOutAddress = toToken.address === 'native' ? WMON_ADDRESS : toToken.address;
+                
                 const swapResponse = await fetch(`${API_BASE}/swap`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        tokenIn: fromToken.address,
-                        tokenOut: toToken.address,
+                        tokenIn: tokenInAddress,
+                        tokenOut: tokenOutAddress,
                         amount: amountWei,
                         slippage: slippage,
                         userAddress: walletAddress
@@ -2081,21 +2086,21 @@
                 }
 
                 // Check if we need token approval first (for ERC20 tokens)
-                const WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
-                const isNativeSwap = fromToken.address.toLowerCase() === WMON.toLowerCase();
+                // Native MON swaps don't need approval
+                const isNativeSwap = fromToken.address === 'native';
                 
                 if (!isNativeSwap) {
                     // Check allowance
                     swapBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> Checking approval...</span>';
                     
-                    const allowance = await checkAllowance(fromToken.address, walletAddress, swapData.to);
+                    const allowance = await checkAllowance(tokenInAddress, walletAddress, swapData.to);
                     
                     if (BigInt(allowance) < BigInt(amountWei)) {
                         // Need approval
                         swapBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> Approving...</span>';
                         showToast('Please approve token spending in your wallet', 'wallet');
                         
-                        await approveToken(fromToken.address, swapData.to, amountWei);
+                        await approveToken(tokenInAddress, swapData.to, amountWei);
                         showToast('Approval confirmed!', 'success');
                     }
                 }

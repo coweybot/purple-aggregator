@@ -1026,6 +1026,12 @@
             100% { left: 150%; }
         }
 
+        .route-item.selected {
+            border: 2px solid var(--purple-primary) !important;
+            background: rgba(139, 92, 246, 0.15);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+
         .route-top {
             display: flex;
             justify-content: space-between;
@@ -1831,6 +1837,9 @@
         let walletAddress = null;
         let walletBalances = {};
         let selectedProvider = null;
+        
+        // ============ ROUTE SELECTION STATE ============
+        let selectedQuoteIndex = 0; // Index of selected route (0 = best)
 
         // ============ WALLET DETECTION ============
         function getAvailableWallets() {
@@ -2130,11 +2139,13 @@
         }
 
         async function checkAllowance(tokenAddress, spenderAddress, amount) {
+            if (!selectedProvider) return false;
+            
             const data = '0xdd62ed3e' + 
                 walletAddress.slice(2).toLowerCase().padStart(64, '0') + 
                 spenderAddress.slice(2).toLowerCase().padStart(64, '0');
             
-            const result = await window.ethereum.request({
+            const result = await selectedProvider.request({
                 method: 'eth_call',
                 params: [{ to: tokenAddress, data }, 'latest']
             });
@@ -2143,11 +2154,13 @@
         }
 
         async function approveToken(tokenAddress, spenderAddress, amount) {
+            if (!selectedProvider) throw new Error('No wallet connected');
+            
             const data = '0x095ea7b3' + 
                 spenderAddress.slice(2).toLowerCase().padStart(64, '0') + 
                 BigInt(amount).toString(16).padStart(64, '0');
             
-            const txHash = await window.ethereum.request({
+            const txHash = await selectedProvider.request({
                 method: 'eth_sendTransaction',
                 params: [{
                     from: walletAddress,
@@ -2163,8 +2176,10 @@
         }
 
         async function waitForTransaction(txHash) {
+            if (!selectedProvider) throw new Error('No wallet connected');
+            
             while (true) {
-                const receipt = await window.ethereum.request({
+                const receipt = await selectedProvider.request({
                     method: 'eth_getTransactionReceipt',
                     params: [txHash]
                 });
@@ -2174,13 +2189,21 @@
         }
 
         async function executeSwap() {
-            if (!lastQuotes || !lastQuotes.bestQuote) {
+            // Use the selected quote (defaults to best quote at index 0)
+            const selectedQuote = getSelectedQuote();
+            
+            if (!selectedQuote || !selectedQuote.quote) {
                 showToast('No quote available. Try a different amount.', 'error');
                 return;
             }
 
             if (!walletAddress) {
                 showToast('Please connect your wallet first', 'wallet');
+                return;
+            }
+            
+            if (!selectedProvider) {
+                showToast('Wallet disconnected. Please reconnect.', 'error');
                 return;
             }
             
@@ -2194,9 +2217,8 @@
                 return;
             }
 
-            const best = lastQuotes.bestQuote;
-            const quote = best.quote;
-            const aggregator = best.aggregator;
+            const quote = selectedQuote.quote;
+            const aggregator = selectedQuote.aggregator;
             
             const inputAmount = document.getElementById('fromAmount').value;
             const outputAmount = formatAmount(quote.toAmount, toToken.decimals);
@@ -2319,6 +2341,10 @@
 
         // Send transaction via connected wallet
         async function sendTransaction({ to, data, value, gas }) {
+            if (!selectedProvider) {
+                throw new Error('No wallet connected');
+            }
+            
             const tx = {
                 from: walletAddress,
                 to: to,
@@ -2327,7 +2353,7 @@
                 gas: gas
             };
             
-            const txHash = await window.ethereum.request({
+            const txHash = await selectedProvider.request({
                 method: 'eth_sendTransaction',
                 params: [tx]
             });
@@ -2361,6 +2387,11 @@
             const originalText = swapBtn.innerHTML;
             
             try {
+                if (!selectedProvider) {
+                    showToast('No wallet connected', 'error');
+                    return;
+                }
+                
                 if (isWrap) {
                     // Wrap: Call deposit() on WMON contract with MON value
                     showToast('Wrapping MON to WMON...', 'info');
@@ -2368,7 +2399,7 @@
                     swapBtn.disabled = true;
                     
                     // deposit() function selector: 0xd0e30db0
-                    const txHash = await window.ethereum.request({
+                    const txHash = await selectedProvider.request({
                         method: 'eth_sendTransaction',
                         params: [{
                             from: walletAddress,
@@ -2403,7 +2434,7 @@
                     
                     // withdraw(uint256) function selector: 0x2e1a7d4d
                     const amountHex = BigInt(amountWei).toString(16).padStart(64, '0');
-                    const txHash = await window.ethereum.request({
+                    const txHash = await selectedProvider.request({
                         method: 'eth_sendTransaction',
                         params: [{
                             from: walletAddress,
@@ -2449,64 +2480,8 @@
             }
         }
 
-        async function checkAllowance(tokenAddress, owner, spender) {
-            const data = '0xdd62ed3e' + 
-                owner.slice(2).toLowerCase().padStart(64, '0') +
-                spender.slice(2).toLowerCase().padStart(64, '0');
-            
-            const result = await window.ethereum.request({
-                method: 'eth_call',
-                params: [{ to: tokenAddress, data: data }, 'latest']
-            });
-            
-            return BigInt(result).toString();
-        }
-
-        // Approve ERC20 token spending
-        async function approveToken(tokenAddress, spender, amount) {
-            // Approve max uint256 for convenience
-            const maxApproval = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
-            const data = '0x095ea7b3' + 
-                spender.slice(2).toLowerCase().padStart(64, '0') +
-                maxApproval.slice(2);
-            
-            const txHash = await window.ethereum.request({
-                method: 'eth_sendTransaction',
-                params: [{
-                    from: walletAddress,
-                    to: tokenAddress,
-                    data: data,
-                    gas: '0x15F90' // 90000
-                }]
-            });
-            
-            // Wait for confirmation
-            await waitForTransaction(txHash);
-            return txHash;
-        }
-
-        // Wait for transaction confirmation
-        async function waitForTransaction(txHash, timeout = 60000) {
-            const start = Date.now();
-            while (Date.now() - start < timeout) {
-                try {
-                    const receipt = await window.ethereum.request({
-                        method: 'eth_getTransactionReceipt',
-                        params: [txHash]
-                    });
-                    if (receipt) {
-                        if (receipt.status === '0x0') {
-                            throw new Error('Transaction reverted');
-                        }
-                        return receipt;
-                    }
-                } catch (e) {
-                    if (e.message === 'Transaction reverted') throw e;
-                }
-                await new Promise(r => setTimeout(r, 2000));
-            }
-            throw new Error('Transaction timeout');
-        }
+        // Note: checkAllowance, approveToken, waitForTransaction are defined above
+        // These duplicate definitions are removed to use the selectedProvider versions
 
         // ============ CUSTOM TOAST/MODAL ============
         function showToast(message, type = 'info', duration = 4000) {
@@ -3065,6 +3040,69 @@
             document.body.appendChild(modal);
         }
 
+        // ============ ROUTE SELECTION ============
+        function selectRoute(index) {
+            if (!window._currentQuotes || index >= window._currentQuotes.length) return;
+            
+            selectedQuoteIndex = index;
+            const selectedQuote = window._currentQuotes[index];
+            
+            // Update visual selection in routes list
+            const routeItems = document.querySelectorAll('.route-item');
+            routeItems.forEach((item, i) => {
+                if (i === index) {
+                    item.classList.add('selected');
+                    item.style.border = '2px solid var(--purple-primary)';
+                } else {
+                    item.classList.remove('selected');
+                    item.style.border = '';
+                }
+            });
+            
+            // Update the selected badge text
+            routeItems.forEach((item, i) => {
+                const existingBadge = item.querySelector('.selected-badge');
+                if (existingBadge) existingBadge.remove();
+                
+                if (i === index) {
+                    const nameDiv = item.querySelector('.route-name');
+                    if (nameDiv && !nameDiv.innerHTML.includes('SELECTED')) {
+                        const badge = document.createElement('span');
+                        badge.className = 'selected-badge';
+                        badge.style.cssText = 'color:var(--purple-primary);font-size:11px;margin-left:8px';
+                        badge.textContent = '✓ SELECTED';
+                        nameDiv.appendChild(badge);
+                    }
+                }
+            });
+            
+            // Update output amount display with selected quote
+            const outAmount = formatAmount(selectedQuote.quote.toAmount, toToken.decimals);
+            const toAmountInput = document.getElementById('toAmount');
+            if (toAmountInput) toAmountInput.value = outAmount;
+            
+            // Update rate display
+            const inputAmount = parseFloat(document.getElementById('fromAmount').value) || 1;
+            const outputAmount = Number(BigInt(selectedQuote.quote.toAmount)) / (10 ** toToken.decimals);
+            const rate = outputAmount / inputAmount;
+            
+            const rateDisplay = document.getElementById('rateDisplay');
+            if (rateDisplay) {
+                rateDisplay.textContent = `1 ${fromToken.symbol} ≈ ${rate.toFixed(4)} ${toToken.symbol}`;
+            }
+            
+            // Show toast confirming selection
+            if (index !== 0) {
+                showToast(`Selected ${selectedQuote.aggregator} route`, 'info', 2000);
+            }
+        }
+        
+        // Get the currently selected quote for swap execution
+        function getSelectedQuote() {
+            if (!window._currentQuotes || window._currentQuotes.length === 0) return null;
+            return window._currentQuotes[selectedQuoteIndex] || window._currentQuotes[0];
+        }
+
         // ============ TAB SWITCHING ============
         function showTab(tab) {
             const swapPanel = document.getElementById('swapCard');
@@ -3392,8 +3430,11 @@
                 '0x': '<img src="https://dashboard.0x.org/favicon.ico" width="20" height="20" style="border-radius:50%">' 
             };
             
-            // Store quotes for route details popup
+            // Store quotes for route details popup and selection
             window._currentQuotes = quotes;
+            
+            // Reset selected route to best (index 0) when new quotes arrive
+            selectedQuoteIndex = 0;
             
             // Limit to top 5 routes
             const topQuotes = quotes.slice(0, 5);
@@ -3401,17 +3442,27 @@
             const routesHtml = topQuotes.map((q, i) => {
                 const amount = formatAmount(q.quote.toAmount, toToken.decimals);
                 const isBest = i === 0;
+                const isSelected = i === selectedQuoteIndex;
                 const icon = icons[q.aggregator] || '🔵';
                 
                 return `
-                    <div class="route-item ${isBest ? 'best' : ''}" onclick="showRouteDetails(window._currentQuotes[${i}])" style="cursor:pointer">
+                    <div class="route-item ${isBest ? 'best' : ''} ${isSelected ? 'selected' : ''}" 
+                         onclick="selectRoute(${i})" 
+                         style="cursor:pointer;${isSelected ? 'border:2px solid var(--purple-primary);' : ''}">
                         <div class="route-top">
                             <div class="route-name">
                                 <div class="route-icon">${icon}</div>
                                 <span class="route-label">${q.aggregator}</span>
-                                ${isBest ? '<span style="color:var(--green);font-size:11px;margin-left:8px">✓ BEST</span>' : ''}
+                                ${isBest ? '<span style="color:var(--green);font-size:11px;margin-left:8px">BEST</span>' : ''}
+                                ${isSelected ? '<span style="color:var(--purple-primary);font-size:11px;margin-left:8px">✓ SELECTED</span>' : ''}
                             </div>
-                            <div class="route-amount">${amount}</div>
+                            <div style="display:flex;align-items:center;gap:8px">
+                                <div class="route-amount">${amount}</div>
+                                <button onclick="event.stopPropagation();showRouteDetails(window._currentQuotes[${i}])" 
+                                        style="background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text-secondary);cursor:pointer;font-size:11px">
+                                    Details
+                                </button>
+                            </div>
                         </div>
                         <div class="route-bottom">
                             <div class="route-path">

@@ -1865,7 +1865,7 @@
         let selectedQuoteIndex = 0; // Index of selected route (0 = best)
         let selectedAggregatorName = null; // Name of selected aggregator (to persist across refreshes)
         let routeSelectionLockedUntil = 0; // Timestamp when user selection lock expires
-        const ROUTE_SELECTION_LOCK_MS = 8000; // Keep user's route selection for 8 seconds
+        const ROUTE_SELECTION_LOCK_MS = 10000; // Keep user's route selection for 10 seconds
 
         // ============ WALLET DETECTION ============
         function getAvailableWallets() {

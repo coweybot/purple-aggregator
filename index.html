@@ -1840,6 +1840,8 @@
         
         // ============ ROUTE SELECTION STATE ============
         let selectedQuoteIndex = 0; // Index of selected route (0 = best)
+        let routeSelectionLockedUntil = 0; // Timestamp when user selection lock expires
+        const ROUTE_SELECTION_LOCK_MS = 8000; // Keep user's route selection for 8 seconds
 
         // ============ WALLET DETECTION ============
         function getAvailableWallets() {
@@ -3050,6 +3052,13 @@
             const selectedQuote = window._currentQuotes[index];
             const userSelectedNonBest = index > 0;
             
+            // Lock selection for a few seconds so auto-refresh doesn't reset it
+            if (userSelectedNonBest) {
+                routeSelectionLockedUntil = Date.now() + ROUTE_SELECTION_LOCK_MS;
+            } else {
+                routeSelectionLockedUntil = 0; // Clear lock if user selects best route
+            }
+            
             // Update visual selection in routes list
             const routeItems = document.querySelectorAll('.route-item');
             routeItems.forEach((item, i) => {
@@ -3443,7 +3452,15 @@
             window._currentQuotes = quotes;
             
             // Reset selected route to best (index 0) when new quotes arrive
-            selectedQuoteIndex = 0;
+            // BUT respect user's selection if they recently picked a different route
+            const selectionLocked = Date.now() < routeSelectionLockedUntil;
+            if (!selectionLocked) {
+                selectedQuoteIndex = 0;
+            }
+            // Also reset if selected index is now out of bounds
+            if (selectedQuoteIndex >= quotes.length) {
+                selectedQuoteIndex = 0;
+            }
             
             // Limit to top 5 routes
             const topQuotes = quotes.slice(0, 5);

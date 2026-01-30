@@ -1467,6 +1467,8 @@
             }
         }
     </style>
+    <!-- WalletConnect -->
+    <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.11.0/dist/index.umd.js"></script>
 </head>
 <body>
     <!-- Background -->
@@ -1854,6 +1856,10 @@
         let walletAddress = null;
         let walletBalances = {};
         let selectedProvider = null;
+        let walletConnectProvider = null;
+        
+        // WalletConnect Project ID (get yours at https://cloud.walletconnect.com)
+        const WALLETCONNECT_PROJECT_ID = '3a8170812b534d0ff9d794f19a901d64';
         
         // ============ ROUTE SELECTION STATE ============
         let selectedQuoteIndex = 0; // Index of selected route (0 = best)
@@ -1918,18 +1924,7 @@
         function showWalletModal() {
             const wallets = getAvailableWallets();
             
-            if (wallets.length === 0) {
-                showWalletPrompt();
-                return;
-            }
-            
-            // If only one wallet, connect directly
-            if (wallets.length === 1) {
-                connectToWallet(wallets[0].provider);
-                return;
-            }
-            
-            // Create modal
+            // Create modal (always show it now for WalletConnect option)
             const modal = document.createElement('div');
             modal.id = 'walletModal';
             modal.style.cssText = `
@@ -1940,7 +1935,7 @@
             const content = document.createElement('div');
             content.style.cssText = `
                 background: var(--bg-card-solid); border-radius: 16px; padding: 24px;
-                min-width: 320px; border: 1px solid var(--border);
+                min-width: 320px; max-width: 400px; border: 1px solid var(--border);
             `;
             content.innerHTML = `
                 <h3 style="margin:0 0 16px;color:var(--text-primary);font-size:18px;">Connect Wallet</h3>
@@ -1948,6 +1943,8 @@
             `;
             
             const list = content.querySelector('#walletList');
+            
+            // Add detected wallets
             wallets.forEach(w => {
                 const btn = document.createElement('button');
                 btn.style.cssText = `
@@ -1963,9 +1960,88 @@
                 list.appendChild(btn);
             });
             
+            // Add WalletConnect option
+            const wcBtn = document.createElement('button');
+            wcBtn.style.cssText = `
+                width: 100%; padding: 12px 16px; margin: 8px 0; border-radius: 12px;
+                background: var(--bg-input); border: 1px solid var(--border);
+                color: var(--text-primary); cursor: pointer; display: flex;
+                align-items: center; gap: 12px; font-size: 16px; transition: all 0.2s;
+            `;
+            wcBtn.innerHTML = `<span style="font-size:24px">🔗</span> WalletConnect`;
+            wcBtn.onmouseover = () => wcBtn.style.borderColor = 'var(--purple-primary)';
+            wcBtn.onmouseout = () => wcBtn.style.borderColor = 'var(--border)';
+            wcBtn.onclick = () => { modal.remove(); connectWalletConnect(); };
+            list.appendChild(wcBtn);
+            
+            // Add divider and "no wallet" help
+            if (wallets.length === 0) {
+                const helpText = document.createElement('p');
+                helpText.style.cssText = 'color: var(--text-secondary); font-size: 13px; margin-top: 16px; text-align: center;';
+                helpText.innerHTML = 'No browser wallet detected.<br>Use WalletConnect or <a href="https://metamask.io" target="_blank" style="color:var(--purple-primary)">install MetaMask</a>';
+                list.appendChild(helpText);
+            }
+            
             modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
             modal.appendChild(content);
             document.body.appendChild(modal);
+        }
+        
+        // ============ WALLETCONNECT ============
+        async function connectWalletConnect() {
+            try {
+                showToast('Opening WalletConnect...', 'info', 3000);
+                
+                // Initialize WalletConnect provider
+                const EthereumProvider = window.EthereumProvider?.default || window.EthereumProvider;
+                
+                if (!EthereumProvider) {
+                    showToast('WalletConnect failed to load. Please refresh and try again.', 'error');
+                    return;
+                }
+                
+                walletConnectProvider = await EthereumProvider.init({
+                    projectId: WALLETCONNECT_PROJECT_ID,
+                    chains: [143], // Monad chain ID
+                    showQrModal: true,
+                    metadata: {
+                        name: 'Purple Aggregator',
+                        description: 'DEX Aggregator for Monad',
+                        url: window.location.origin,
+                        icons: ['https://raw.githubusercontent.com/coweybot/purple-aggregator/main/assets/purple-logo.png']
+                    },
+                    rpcMap: {
+                        143: 'https://rpc.monad.xyz'
+                    }
+                });
+                
+                // Enable session (triggers QR modal)
+                await walletConnectProvider.enable();
+                
+                // Get connected accounts
+                const accounts = await walletConnectProvider.request({ method: 'eth_accounts' });
+                
+                if (accounts.length > 0) {
+                    selectedProvider = walletConnectProvider;
+                    walletAddress = accounts[0];
+                    
+                    // Setup event listeners
+                    setupWalletListeners(walletConnectProvider);
+                    
+                    // Update UI
+                    updateWalletUI();
+                    await fetchBalances();
+                    
+                    showToast('Connected via WalletConnect!', 'success');
+                }
+            } catch (error) {
+                console.error('WalletConnect error:', error);
+                if (error.message?.includes('User rejected')) {
+                    showToast('Connection cancelled', 'info');
+                } else {
+                    showToast('WalletConnect failed: ' + (error.message || 'Unknown error'), 'error');
+                }
+            }
         }
 
         // ============ WALLET FUNCTIONS ============
@@ -2162,9 +2238,19 @@
             document.getElementById('walletMenu')?.remove();
         }
         
-        function disconnectWallet() {
+        async function disconnectWallet() {
             // Clear local storage flag if any
             localStorage.removeItem('walletConnected');
+            
+            // Disconnect WalletConnect if it was used
+            if (walletConnectProvider) {
+                try {
+                    await walletConnectProvider.disconnect();
+                } catch (e) {
+                    console.log('WalletConnect disconnect:', e);
+                }
+                walletConnectProvider = null;
+            }
             
             // Show toast then reload for clean state
             showToast('Disconnecting...', 'info');

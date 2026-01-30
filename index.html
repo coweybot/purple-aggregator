@@ -1889,6 +1889,23 @@
                 wallets.push({ name: 'Trust', icon: '🛡️', provider: window.trustwallet.ethereum });
             }
             
+            // Haha Wallet
+            if (window.haha?.ethereum) {
+                wallets.push({ name: 'Haha', icon: '😄', provider: window.haha.ethereum });
+            } else if (window.ethereum?.isHaha) {
+                wallets.push({ name: 'Haha', icon: '😄', provider: window.ethereum });
+            }
+            
+            // OKX Wallet
+            if (window.okxwallet) {
+                wallets.push({ name: 'OKX', icon: '⭕', provider: window.okxwallet });
+            }
+            
+            // Rabby Wallet
+            if (window.rabby) {
+                wallets.push({ name: 'Rabby', icon: '🐰', provider: window.rabby });
+            }
+            
             // Generic injected (fallback)
             if (window.ethereum && wallets.length === 0) {
                 wallets.push({ name: 'Browser Wallet', icon: '🌐', provider: window.ethereum });
@@ -1956,6 +1973,34 @@
             showWalletModal();
         }
 
+        // Setup wallet event listeners for connected provider
+        function setupWalletListeners(provider) {
+            if (!provider || provider._listenersSetup) return;
+            provider._listenersSetup = true; // Prevent duplicate listeners
+            
+            provider.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    walletAddress = null;
+                    walletBalances = {};
+                    selectedProvider = null;
+                    document.querySelectorAll('.connect-btn').forEach(btn => {
+                        btn.textContent = 'Connect Wallet';
+                        btn.classList.remove('connected');
+                    });
+                    const actionBtn = document.getElementById('actionBtn');
+                    if (actionBtn) actionBtn.textContent = 'Connect Wallet';
+                } else {
+                    walletAddress = accounts[0];
+                    updateWalletUI();
+                    fetchBalances();
+                }
+            });
+
+            provider.on('chainChanged', () => {
+                window.location.reload();
+            });
+        }
+
         async function connectToWallet(provider) {
             selectedProvider = provider;
             
@@ -1981,6 +2026,9 @@
                         throw switchError;
                     }
                 }
+
+                // Setup event listeners for this wallet
+                setupWalletListeners(provider);
 
                 // Update UI
                 updateWalletUI();
@@ -3907,32 +3955,6 @@
                 }
             });
 
-            // Setup wallet event listeners for connected provider
-            function setupWalletListeners(provider) {
-                if (!provider) return;
-                
-                provider.on('accountsChanged', (accounts) => {
-                    if (accounts.length === 0) {
-                        walletAddress = null;
-                        walletBalances = {};
-                        selectedProvider = null;
-                        document.querySelectorAll('.connect-btn').forEach(btn => {
-                            btn.textContent = 'Connect Wallet';
-                            btn.classList.remove('connected');
-                        });
-                        document.getElementById('actionBtn').textContent = 'Connect Wallet';
-                    } else {
-                        walletAddress = accounts[0];
-                        updateWalletUI();
-                        fetchBalances();
-                    }
-                });
-
-                provider.on('chainChanged', () => {
-                    window.location.reload();
-                });
-            }
-            
             // Try to auto-reconnect if previously connected
             const wallets = getAvailableWallets();
             if (wallets.length > 0) {

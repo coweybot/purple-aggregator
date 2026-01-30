@@ -3506,12 +3506,7 @@
                                 ${isBest ? '<span style="color:var(--green);font-size:11px;margin-left:8px">BEST</span>' : ''}
                                 ${showSelectedStyle ? '<span style="color:var(--purple-primary);font-size:11px;margin-left:8px">✓ SELECTED</span>' : ''}
                             </div>
-                            <div style="display:flex;align-items:center;gap:8px">
-                                <div class="route-amount">${amount}</div>
-                                <button onclick="event.stopPropagation();showRouteDetails(window._currentQuotes[${i}])" class="details-btn">
-                                    Details
-                                </button>
-                            </div>
+                            <div class="route-amount">${amount}</div>
                         </div>
                         <div class="route-bottom">
                             <div class="route-path">
@@ -3521,7 +3516,9 @@
                                 <span class="route-path-arrow">→</span>
                                 <span class="route-path-node">${toToken.symbol}</span>
                             </div>
-                            <div class="route-gas">${q.responseTime}ms</div>
+                            <button onclick="event.stopPropagation();showRouteDetails(window._currentQuotes[${i}])" class="details-btn">
+                                Details
+                            </button>
                         </div>
                     </div>
                 `;

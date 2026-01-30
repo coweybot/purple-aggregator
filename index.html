@@ -3043,36 +3043,45 @@
         // ============ ROUTE SELECTION ============
         function selectRoute(index) {
             if (!window._currentQuotes || index >= window._currentQuotes.length) return;
+            if (index === selectedQuoteIndex) return; // Already selected
             
+            const previousIndex = selectedQuoteIndex;
             selectedQuoteIndex = index;
             const selectedQuote = window._currentQuotes[index];
+            const userSelectedNonBest = index > 0;
             
             // Update visual selection in routes list
             const routeItems = document.querySelectorAll('.route-item');
             routeItems.forEach((item, i) => {
-                if (i === index) {
-                    item.classList.add('selected');
-                    item.style.border = '2px solid var(--purple-primary)';
-                } else {
-                    item.classList.remove('selected');
-                    item.style.border = '';
-                }
-            });
-            
-            // Update the selected badge text
-            routeItems.forEach((item, i) => {
+                const isBest = i === 0;
+                const isSelected = i === index;
+                
+                // Remove all selection states
+                item.classList.remove('selected', 'best');
+                item.style.border = '';
+                
+                // Remove any existing SELECTED badge
                 const existingBadge = item.querySelector('.selected-badge');
                 if (existingBadge) existingBadge.remove();
                 
-                if (i === index) {
+                // Apply correct state
+                if (isSelected && userSelectedNonBest) {
+                    // User selected a non-best route
+                    item.classList.add('selected');
+                    item.style.border = '2px solid var(--purple-primary)';
+                    
+                    // Add SELECTED badge
                     const nameDiv = item.querySelector('.route-name');
-                    if (nameDiv && !nameDiv.innerHTML.includes('SELECTED')) {
+                    if (nameDiv) {
                         const badge = document.createElement('span');
                         badge.className = 'selected-badge';
                         badge.style.cssText = 'color:var(--purple-primary);font-size:11px;margin-left:8px';
                         badge.textContent = '✓ SELECTED';
                         nameDiv.appendChild(badge);
                     }
+                } else if (isBest && !userSelectedNonBest) {
+                    // Best route is selected (default state)
+                    item.classList.add('best');
                 }
             });
             
@@ -3091,8 +3100,8 @@
                 rateDisplay.textContent = `1 ${fromToken.symbol} ≈ ${rate.toFixed(4)} ${toToken.symbol}`;
             }
             
-            // Show toast confirming selection
-            if (index !== 0) {
+            // Show toast confirming selection (only for non-best routes)
+            if (index > 0) {
                 showToast(`Selected ${selectedQuote.aggregator} route`, 'info', 2000);
             }
         }
@@ -3443,18 +3452,25 @@
                 const amount = formatAmount(q.quote.toAmount, toToken.decimals);
                 const isBest = i === 0;
                 const isSelected = i === selectedQuoteIndex;
+                const userSelectedNonBest = selectedQuoteIndex > 0; // User clicked a non-best route
                 const icon = icons[q.aggregator] || '🔵';
                 
+                // Determine styling:
+                // - Best route gets "best" class ONLY if user hasn't selected another route
+                // - Selected route gets "selected" class ONLY if it's not the best (user manually selected it)
+                const showBestStyle = isBest && !userSelectedNonBest;
+                const showSelectedStyle = isSelected && userSelectedNonBest;
+                
                 return `
-                    <div class="route-item ${isBest ? 'best' : ''} ${isSelected ? 'selected' : ''}" 
+                    <div class="route-item ${showBestStyle ? 'best' : ''} ${showSelectedStyle ? 'selected' : ''}" 
                          onclick="selectRoute(${i})" 
-                         style="cursor:pointer;${isSelected ? 'border:2px solid var(--purple-primary);' : ''}">
+                         style="cursor:pointer;${showSelectedStyle ? 'border:2px solid var(--purple-primary);' : ''}">
                         <div class="route-top">
                             <div class="route-name">
                                 <div class="route-icon">${icon}</div>
                                 <span class="route-label">${q.aggregator}</span>
                                 ${isBest ? '<span style="color:var(--green);font-size:11px;margin-left:8px">BEST</span>' : ''}
-                                ${isSelected ? '<span style="color:var(--purple-primary);font-size:11px;margin-left:8px">✓ SELECTED</span>' : ''}
+                                ${showSelectedStyle ? '<span style="color:var(--purple-primary);font-size:11px;margin-left:8px">✓ SELECTED</span>' : ''}
                             </div>
                             <div style="display:flex;align-items:center;gap:8px">
                                 <div class="route-amount">${amount}</div>

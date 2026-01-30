@@ -1863,6 +1863,7 @@
         
         // ============ ROUTE SELECTION STATE ============
         let selectedQuoteIndex = 0; // Index of selected route (0 = best)
+        let selectedAggregatorName = null; // Name of selected aggregator (to persist across refreshes)
         let routeSelectionLockedUntil = 0; // Timestamp when user selection lock expires
         const ROUTE_SELECTION_LOCK_MS = 8000; // Keep user's route selection for 8 seconds
 
@@ -3215,10 +3216,13 @@
             const userSelectedNonBest = index > 0;
             
             // Lock selection for a few seconds so auto-refresh doesn't reset it
+            // Also store the aggregator NAME so we can find it after refresh
             if (userSelectedNonBest) {
                 routeSelectionLockedUntil = Date.now() + ROUTE_SELECTION_LOCK_MS;
+                selectedAggregatorName = selectedQuote.aggregator;
             } else {
                 routeSelectionLockedUntil = 0; // Clear lock if user selects best route
+                selectedAggregatorName = null;
             }
             
             // Update visual selection in routes list
@@ -3613,15 +3617,29 @@
             // Store quotes for route details popup and selection
             window._currentQuotes = quotes;
             
-            // Reset selected route to best (index 0) when new quotes arrive
-            // BUT respect user's selection if they recently picked a different route
+            // Handle route selection persistence across refreshes
             const selectionLocked = Date.now() < routeSelectionLockedUntil;
-            if (!selectionLocked) {
+            if (selectionLocked && selectedAggregatorName) {
+                // Find the new index of the selected aggregator (order may have changed)
+                const newIndex = quotes.findIndex(q => q.aggregator === selectedAggregatorName);
+                if (newIndex !== -1) {
+                    selectedQuoteIndex = newIndex;
+                } else {
+                    // Selected aggregator no longer in list, reset to best
+                    selectedQuoteIndex = 0;
+                    selectedAggregatorName = null;
+                    routeSelectionLockedUntil = 0;
+                }
+            } else if (!selectionLocked) {
+                // Lock expired, reset to best route
                 selectedQuoteIndex = 0;
+                selectedAggregatorName = null;
             }
+            
             // Also reset if selected index is now out of bounds
             if (selectedQuoteIndex >= quotes.length) {
                 selectedQuoteIndex = 0;
+                selectedAggregatorName = null;
             }
             
             // Limit to top 5 routes

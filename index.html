@@ -1109,6 +1109,23 @@
             color: var(--text-secondary);
         }
 
+        .details-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s ease;
+        }
+
+        .details-btn:hover {
+            border-color: var(--purple-primary);
+            color: var(--purple-primary);
+            box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+        }
+
         /* Savings Card */
         .savings-card {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));
@@ -3491,8 +3508,7 @@
                             </div>
                             <div style="display:flex;align-items:center;gap:8px">
                                 <div class="route-amount">${amount}</div>
-                                <button onclick="event.stopPropagation();showRouteDetails(window._currentQuotes[${i}])" 
-                                        style="background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text-secondary);cursor:pointer;font-size:11px">
+                                <button onclick="event.stopPropagation();showRouteDetails(window._currentQuotes[${i}])" class="details-btn">
                                     Details
                                 </button>
                             </div>

@@ -2239,8 +2239,8 @@
         }
         
         async function disconnectWallet() {
-            // Clear local storage flag if any
-            localStorage.removeItem('walletConnected');
+            // Set flag to prevent auto-reconnect after reload
+            localStorage.setItem('walletDisconnected', 'true');
             
             // Disconnect WalletConnect if it was used
             if (walletConnectProvider) {
@@ -2252,13 +2252,23 @@
                 walletConnectProvider = null;
             }
             
-            // Show toast then reload for clean state
-            showToast('Disconnecting...', 'info');
+            // Clear state
+            walletAddress = null;
+            walletBalances = {};
+            selectedProvider = null;
             
-            // Reload page after brief delay to show toast
-            setTimeout(() => {
-                window.location.reload();
-            }, 500);
+            // Update UI without reload
+            document.querySelectorAll('.connect-btn').forEach(btn => {
+                btn.textContent = 'Connect Wallet';
+                btn.classList.remove('connected');
+            });
+            const actionBtn = document.getElementById('actionBtn');
+            if (actionBtn) actionBtn.textContent = 'Connect Wallet';
+            
+            // Close wallet menu if open
+            document.getElementById('walletMenu')?.remove();
+            
+            showToast('Wallet disconnected', 'success');
         }
 
         function updateBalanceDisplay() {
@@ -4041,19 +4051,25 @@
                 }
             });
 
-            // Try to auto-reconnect if previously connected
-            const wallets = getAvailableWallets();
-            if (wallets.length > 0) {
-                const provider = wallets[0].provider;
-                provider.request({ method: 'eth_accounts' }).then(accounts => {
-                    if (accounts.length > 0) {
-                        selectedProvider = provider;
-                        walletAddress = accounts[0];
-                        updateWalletUI();
-                        fetchBalances();
-                        setupWalletListeners(provider);
-                    }
-                }).catch(() => {});
+            // Try to auto-reconnect if previously connected (but not if user just disconnected)
+            const wasDisconnected = localStorage.getItem('walletDisconnected');
+            if (wasDisconnected) {
+                localStorage.removeItem('walletDisconnected'); // Clear flag
+                // Don't auto-reconnect, let user choose
+            } else {
+                const wallets = getAvailableWallets();
+                if (wallets.length > 0) {
+                    const provider = wallets[0].provider;
+                    provider.request({ method: 'eth_accounts' }).then(accounts => {
+                        if (accounts.length > 0) {
+                            selectedProvider = provider;
+                            walletAddress = accounts[0];
+                            updateWalletUI();
+                            fetchBalances();
+                            setupWalletListeners(provider);
+                        }
+                    }).catch(() => {});
+                }
             }
         });
     </script>

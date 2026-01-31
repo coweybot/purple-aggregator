@@ -2481,12 +2481,25 @@
                 swapBtn.innerHTML = '<span style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div> Confirm in wallet...</span>';
                 showToast('Please confirm the swap in your wallet', 'wallet');
 
+                // Determine the value to send
+                // For native swaps: use swapData.value if provided (some aggregators set it), otherwise use input amount
+                let txValue = '0x0';
+                if (isNativeSwap) {
+                    if (swapData.value && swapData.value !== '0' && swapData.value !== '0x0') {
+                        // Use the value from aggregator (they know what's needed)
+                        txValue = swapData.value.startsWith('0x') ? swapData.value : '0x' + BigInt(swapData.value).toString(16);
+                    } else {
+                        // Default to full input amount for native swaps
+                        txValue = '0x' + BigInt(amountWei).toString(16);
+                    }
+                }
+
                 // Send transaction via wallet
                 const txHash = await sendTransaction({
                     to: swapData.to,
                     data: swapData.data,
-                    value: isNativeSwap ? '0x' + BigInt(amountWei).toString(16) : '0x0',
-                    gas: '0x' + (parseInt(swapData.estimatedGas) * 2).toString(16) // 2x gas buffer
+                    value: txValue,
+                    gas: '0x' + (parseInt(swapData.estimatedGas || 500000) * 2).toString(16) // 2x gas buffer
                 });
 
                 // Calculate USD value for stats
@@ -2542,8 +2555,10 @@
                 
                 if (error.message.includes('rejected') || error.message.includes('denied')) {
                     showToast('Transaction rejected by user', 'error');
+                } else if (error.message.includes('reverted') || error.message.includes('CALL_EXCEPTION')) {
+                    showToast(`Swap reverted - try a different route or increase slippage`, 'error');
                 } else {
-                    showToast(`Swap failed: ${error.message}`, 'error');
+                    showToast(`Swap failed: ${error.message.slice(0, 100)}`, 'error');
                 }
             } finally {
                 swapBtn.innerHTML = originalText;

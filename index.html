@@ -2944,11 +2944,34 @@
             let html = '';
             
             // Filter tokens
-            const filteredTokens = Object.entries(TOKENS).filter(([key, token]) => {
+            let filteredTokens = Object.entries(TOKENS).filter(([key, token]) => {
                 if (!filter) return true;
                 return token.symbol.toLowerCase().includes(filterLower) || 
                        token.name?.toLowerCase().includes(filterLower) ||
                        token.address.toLowerCase().includes(filterLower);
+            });
+            
+            // Sort tokens: tokens with balance first, then by balance amount (descending)
+            filteredTokens.sort(([keyA, tokenA], [keyB, tokenB]) => {
+                const balA = walletBalances[tokenA.symbol] || 0n;
+                const balB = walletBalances[tokenB.symbol] || 0n;
+                const hasBalA = balA > 0n;
+                const hasBalB = balB > 0n;
+                
+                // Tokens with balance come first
+                if (hasBalA && !hasBalB) return -1;
+                if (!hasBalA && hasBalB) return 1;
+                
+                // If both have balance, sort by balance (higher first)
+                if (hasBalA && hasBalB) {
+                    // Normalize to comparable values (rough USD value approximation)
+                    const valA = Number(balA) / (10 ** tokenA.decimals);
+                    const valB = Number(balB) / (10 ** tokenB.decimals);
+                    return valB - valA;
+                }
+                
+                // Keep original order for tokens without balance
+                return 0;
             });
             
             if (filteredTokens.length === 0 && isAddress) {
@@ -2960,13 +2983,24 @@
                     </div>
                 `;
             } else {
-                html = filteredTokens.map(([key, token]) => {
+                let addedDivider = false;
+                const hasAnyBalance = filteredTokens.some(([k, t]) => walletBalances[t.symbol] > 0n);
+                
+                html = filteredTokens.map(([key, token], index) => {
                     const isSelected = currentToken.symbol === token.symbol;
                     const balance = walletBalances[token.symbol];
+                    const hasBalance = balance && balance > 0n;
                     const balDisplay = balance !== undefined ? 
                         (Number(balance) / (10 ** token.decimals)).toFixed(4) : '-';
                     
-                    return `
+                    // Add divider before first token without balance (if there are tokens with balance)
+                    let divider = '';
+                    if (hasAnyBalance && !hasBalance && !addedDivider) {
+                        addedDivider = true;
+                        divider = `<div style="padding: 8px 16px; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-top: 1px solid rgba(147, 51, 234, 0.15); margin-top: 8px;">Other Tokens</div>`;
+                    }
+                    
+                    return divider + `
                         <div onclick="selectTokenFromModal('${key}', '${side}')" 
                             style="display: flex; align-items: center; padding: 12px 16px; border-radius: 12px; cursor: pointer; margin-bottom: 4px; background: ${isSelected ? 'rgba(147, 51, 234, 0.2)' : 'transparent'};"
                             onmouseenter="this.style.background='rgba(147, 51, 234, 0.15)'"
@@ -2980,7 +3014,7 @@
                                 <div style="color: #888; font-size: 12px;">${token.name || token.symbol}</div>
                             </div>
                             <div style="text-align: right;">
-                                <div style="color: white; font-size: 14px;">${balDisplay}</div>
+                                <div style="color: ${hasBalance ? 'white' : '#666'}; font-size: 14px;">${balDisplay}</div>
                             </div>
                         </div>
                     `;

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getAddress } from 'ethers';
 
 /**
  * Mace Adapter (Native Monad Aggregator)
@@ -6,6 +7,7 @@ import axios from 'axios';
  * 
  * Uses get-best-routes for detailed routing info
  * Supports includeTransactionInfo for executable calldata
+ * NOTE: Mace requires EIP-55 checksummed addresses!
  */
 export default class MaceAdapter {
   constructor() {
@@ -14,6 +16,16 @@ export default class MaceAdapter {
     this.exchangeCache = null;
     this.cacheTime = 0;
     this.routerAddress = null;
+  }
+
+  // Convert to checksummed address (Mace requires this)
+  toChecksumAddress(address) {
+    if (!address || address === 'native') return address;
+    try {
+      return getAddress(address);
+    } catch {
+      return address;
+    }
   }
 
   async getRouterAddress() {
@@ -46,14 +58,15 @@ export default class MaceAdapter {
     try {
       // WMON address - use 'native' for native MON swaps
       const WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
-      const inToken = tokenIn.toLowerCase() === WMON.toLowerCase() ? 'native' : tokenIn;
+      const inToken = tokenIn.toLowerCase() === WMON.toLowerCase() ? 'native' : this.toChecksumAddress(tokenIn);
+      const outToken = this.toChecksumAddress(tokenOut);
       
       // Use get-best-routes with actual tokenIn for detailed routing
       const response = await axios.post(
         `${this.baseUrl}/get-best-routes`,
         {
           in: [{ token: inToken, amount: amount }],
-          out: [{ token: tokenOut, slippageToleranceBps: Math.round(slippage * 100) }]
+          out: [{ token: outToken, slippageToleranceBps: Math.round(slippage * 100) }]
         },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -118,7 +131,8 @@ export default class MaceAdapter {
   async getSwapData({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress, recipient }) {
     try {
       const WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
-      const inToken = tokenIn.toLowerCase() === WMON.toLowerCase() ? 'native' : tokenIn;
+      const inToken = tokenIn.toLowerCase() === WMON.toLowerCase() ? 'native' : this.toChecksumAddress(tokenIn);
+      const outToken = this.toChecksumAddress(tokenOut);
       const isNativeIn = inToken === 'native';
       
       // Call get-best-routes with includeTransactionInfo: true
@@ -126,7 +140,7 @@ export default class MaceAdapter {
         `${this.baseUrl}/get-best-routes`,
         {
           in: [{ token: inToken, amount: amount }],
-          out: [{ token: tokenOut, slippageToleranceBps: Math.round(slippage * 100) }],
+          out: [{ token: outToken, slippageToleranceBps: Math.round(slippage * 100) }],
           from: userAddress,
           solver: {
             includeTransactionInfo: true,

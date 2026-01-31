@@ -2,6 +2,7 @@ import express from 'express';
 import MaceAdapter from '../adapters/mace.js';
 import MonorailAdapter from '../adapters/monorail.js';
 import ZeroXAdapter from '../adapters/zerox.js';
+import OKXAdapter from '../adapters/okx.js';
 
 const router = express.Router();
 
@@ -9,7 +10,8 @@ const router = express.Router();
 const adapters = {
   'Mace': new MaceAdapter(),
   'Monorail': new MonorailAdapter(),
-  '0x': new ZeroXAdapter()
+  '0x': new ZeroXAdapter(),
+  'OKX': new OKXAdapter()
 };
 
 /**
@@ -107,6 +109,25 @@ router.post('/swap', async (req, res) => {
         };
       } else {
         throw new Error('0x did not return transaction data');
+      }
+    } else if (aggregator === 'OKX' && adapters['OKX']) {
+      // OKX has dedicated getSwapData
+      swapData = await adapters['OKX'].getSwapData({
+        tokenIn,
+        tokenOut,
+        amount,
+        slippage: parseFloat(slippage),
+        userAddress
+      });
+      
+      if (!swapData.success) {
+        // Fall back to Mace if OKX fails
+        console.log(`[Swap] OKX failed, falling back to Mace`);
+        swapData = await adapters['Mace'].getSwapData({
+          tokenIn, tokenOut, amount,
+          slippage: parseFloat(slippage),
+          userAddress, recipient: recipient || userAddress
+        });
       }
     } else {
       // Unknown aggregator or not available, fall back to Mace

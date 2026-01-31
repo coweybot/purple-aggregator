@@ -10,18 +10,25 @@ export default class OpenOceanAdapter {
     this.baseUrl = 'https://open-api.openocean.finance/v3';
     // Monad mainnet chain ID
     this.chain = '143';
+    // OpenOcean uses this for native token
+    this.NATIVE_TOKEN = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+    this.WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
   }
 
   async getQuote({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress, decimals = 18 }) {
     try {
+      // Convert WMON to native token address
+      const inToken = tokenIn.toLowerCase() === this.WMON.toLowerCase() ? this.NATIVE_TOKEN : tokenIn;
+      const outToken = tokenOut.toLowerCase() === this.WMON.toLowerCase() ? this.NATIVE_TOKEN : tokenOut;
+      
       // OpenOcean uses human-readable amounts, not wei
       // Convert from wei to human-readable
       const humanAmount = (BigInt(amount) / BigInt(10 ** decimals)).toString();
       
       const response = await axios.get(`${this.baseUrl}/${this.chain}/quote`, {
         params: {
-          inTokenAddress: tokenIn,
-          outTokenAddress: tokenOut,
+          inTokenAddress: inToken,
+          outTokenAddress: outToken,
           amount: humanAmount,
           gasPrice: '5', // Gwei - adjust for Monad
           slippage: slippage,

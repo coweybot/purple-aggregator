@@ -10,17 +10,24 @@ export default class KyberSwapAdapter {
     this.baseUrl = 'https://aggregator-api.kyberswap.com';
     // Monad mainnet (uses 'monad' string, not chain ID)
     this.chain = 'monad';
+    // KyberSwap uses this for native token
+    this.NATIVE_TOKEN = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+    this.WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
   }
 
   async getQuote({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress }) {
     try {
+      // Convert WMON to native token address
+      const inToken = tokenIn.toLowerCase() === this.WMON.toLowerCase() ? this.NATIVE_TOKEN : tokenIn;
+      const outToken = tokenOut.toLowerCase() === this.WMON.toLowerCase() ? this.NATIVE_TOKEN : tokenOut;
+      
       // Step 1: Get route
       const routeResponse = await axios.get(
         `${this.baseUrl}/${this.chain}/api/v1/routes`,
         {
           params: {
-            tokenIn: tokenIn,
-            tokenOut: tokenOut,
+            tokenIn: inToken,
+            tokenOut: outToken,
             amountIn: amount,
           },
           timeout: 10000

@@ -48,12 +48,16 @@ export default class OKXAdapter {
     try {
       // OKX uses 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for native token
       const NATIVE_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-      const fromToken = tokenIn.toLowerCase() === '0x0000000000000000000000000000000000000000' 
-        ? NATIVE_ADDRESS 
-        : tokenIn;
-      const toToken = tokenOut.toLowerCase() === '0x0000000000000000000000000000000000000000'
-        ? NATIVE_ADDRESS
-        : tokenOut;
+      const WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
+      
+      // Convert WMON or zero address to native token format
+      const isNativeIn = tokenIn.toLowerCase() === '0x0000000000000000000000000000000000000000' || 
+                         tokenIn.toLowerCase() === WMON.toLowerCase();
+      const isNativeOut = tokenOut.toLowerCase() === '0x0000000000000000000000000000000000000000' ||
+                          tokenOut.toLowerCase() === WMON.toLowerCase();
+      
+      const fromToken = isNativeIn ? NATIVE_ADDRESS : tokenIn;
+      const toToken = isNativeOut ? NATIVE_ADDRESS : tokenOut;
 
       const requestPath = '/quote';
       const params = new URLSearchParams({
@@ -122,12 +126,16 @@ export default class OKXAdapter {
   async getSwapData({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress }) {
     try {
       const NATIVE_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-      const fromToken = tokenIn.toLowerCase() === '0x0000000000000000000000000000000000000000' 
-        ? NATIVE_ADDRESS 
-        : tokenIn;
-      const toToken = tokenOut.toLowerCase() === '0x0000000000000000000000000000000000000000'
-        ? NATIVE_ADDRESS
-        : tokenOut;
+      const WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
+      
+      // Convert WMON or zero address to native token format
+      const isNativeIn = tokenIn.toLowerCase() === '0x0000000000000000000000000000000000000000' || 
+                         tokenIn.toLowerCase() === WMON.toLowerCase();
+      const isNativeOut = tokenOut.toLowerCase() === '0x0000000000000000000000000000000000000000' ||
+                          tokenOut.toLowerCase() === WMON.toLowerCase();
+      
+      const fromToken = isNativeIn ? NATIVE_ADDRESS : tokenIn;
+      const toToken = isNativeOut ? NATIVE_ADDRESS : tokenOut;
 
       const requestPath = '/swap';
       const params = new URLSearchParams({

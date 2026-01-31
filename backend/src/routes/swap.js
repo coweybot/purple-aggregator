@@ -3,29 +3,27 @@ import MaceAdapter from '../adapters/mace.js';
 import MonorailAdapter from '../adapters/monorail.js';
 import ZeroXAdapter from '../adapters/zerox.js';
 import OKXAdapter from '../adapters/okx.js';
+import OpenOceanAdapter from '../adapters/openocean.js';
+import KyberSwapAdapter from '../adapters/kyberswap.js';
 
 const router = express.Router();
 
-// Initialize adapters that support swap execution
+// WMON address for native token conversion
+const WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
+
+// Initialize ALL adapters that support swap execution
 const adapters = {
   'Mace': new MaceAdapter(),
   'Monorail': new MonorailAdapter(),
   '0x': new ZeroXAdapter(),
-  'OKX': new OKXAdapter()
+  'OKX': new OKXAdapter(),
+  'OpenOcean': new OpenOceanAdapter(),
+  'KyberSwap': new KyberSwapAdapter()
 };
 
 /**
  * POST /api/swap
  * Get executable swap data (calldata, to, value) for direct execution
- * 
- * Body params:
- * - tokenIn: Address of token to sell
- * - tokenOut: Address of token to buy
- * - amount: Amount in wei (string)
- * - slippage: Slippage tolerance in % (default 0.5)
- * - userAddress: User's wallet address (required)
- * - recipient: Recipient address (optional, defaults to userAddress)
- * - aggregator: Preferred aggregator (optional, defaults to Mace)
  */
 router.post('/swap', async (req, res) => {
   try {
@@ -50,88 +48,115 @@ router.post('/swap', async (req, res) => {
     
     let swapData;
     
-    // Route to the correct adapter based on user's selection
-    if (aggregator === 'Mace' && adapters['Mace']) {
-      // Mace has dedicated getSwapData
-      swapData = await adapters['Mace'].getSwapData({
-        tokenIn,
-        tokenOut,
-        amount,
-        slippage: parseFloat(slippage),
-        userAddress,
-        recipient: recipient || userAddress
-      });
-    } else if (aggregator === 'Monorail' && adapters['Monorail']) {
-      // Monorail returns transaction data in getQuote
-      const quote = await adapters['Monorail'].getQuote({
-        tokenIn,
-        tokenOut,
-        amount,
-        slippage: parseFloat(slippage),
-        userAddress
-      });
-      
-      if (quote.transaction) {
-        swapData = {
-          success: true,
-          to: quote.transaction.to,
-          data: quote.transaction.data,
-          value: quote.transaction.value || '0',
-          estimatedGas: quote.estimatedGas || '300000'
-        };
-      } else {
-        // Monorail didn't return transaction data, fall back to Mace
-        console.log(`[Swap] Monorail didn't return tx data, falling back to Mace`);
-        swapData = await adapters['Mace'].getSwapData({
-          tokenIn, tokenOut, amount,
-          slippage: parseFloat(slippage),
-          userAddress, recipient: recipient || userAddress
-        });
+    try {
+      // Route to the correct adapter based on user's selection
+      switch (aggregator) {
+        case 'Mace':
+          swapData = await adapters['Mace'].getSwapData({
+            tokenIn, tokenOut, amount,
+            slippage: parseFloat(slippage),
+            userAddress,
+            recipient: recipient || userAddress
+          });
+          break;
+
+        case 'Monorail':
+          const monorailQuote = await adapters['Monorail'].getQuote({
+            tokenIn, tokenOut, amount,
+            slippage: parseFloat(slippage),
+            userAddress
+          });
+          if (monorailQuote.transaction) {
+            swapData = {
+              success: true,
+              to: monorailQuote.transaction.to,
+              data: monorailQuote.transaction.data,
+              value: monorailQuote.transaction.value || '0',
+              estimatedGas: monorailQuote.estimatedGas || '300000'
+            };
+          } else {
+            throw new Error('Monorail did not return transaction data');
+          }
+          break;
+
+        case '0x':
+          const zeroXQuote = await adapters['0x'].getQuote({
+            tokenIn, tokenOut, amount,
+            slippage: parseFloat(slippage),
+            userAddress
+          });
+          if (zeroXQuote.calldata && zeroXQuote.to) {
+            swapData = {
+              success: true,
+              to: zeroXQuote.to,
+              data: zeroXQuote.calldata,
+              value: zeroXQuote.value || '0',
+              estimatedGas: zeroXQuote.estimatedGas || '300000',
+              allowanceTarget: zeroXQuote.allowanceTarget
+            };
+          } else {
+            throw new Error('0x did not return transaction data');
+          }
+          break;
+
+        case 'OKX':
+          swapData = await adapters['OKX'].getSwapData({
+            tokenIn, tokenOut, amount,
+            slippage: parseFloat(slippage),
+            userAddress
+          });
+          break;
+
+        case 'OpenOcean':
+          const openOceanQuote = await adapters['OpenOcean'].getQuote({
+            tokenIn, tokenOut, amount,
+            slippage: parseFloat(slippage),
+            userAddress
+          });
+          if (openOceanQuote.calldata && openOceanQuote.to) {
+            swapData = {
+              success: true,
+              to: openOceanQuote.to,
+              data: openOceanQuote.calldata,
+              value: openOceanQuote.value || '0',
+              estimatedGas: openOceanQuote.estimatedGas || '300000'
+            };
+          } else {
+            throw new Error('OpenOcean did not return transaction data');
+          }
+          break;
+
+        case 'KyberSwap':
+          const kyberQuote = await adapters['KyberSwap'].getQuote({
+            tokenIn, tokenOut, amount,
+            slippage: parseFloat(slippage),
+            userAddress
+          });
+          if (kyberQuote.calldata && kyberQuote.to) {
+            swapData = {
+              success: true,
+              to: kyberQuote.to,
+              data: kyberQuote.calldata,
+              value: kyberQuote.value || '0',
+              estimatedGas: kyberQuote.estimatedGas || '300000'
+            };
+          } else {
+            throw new Error('KyberSwap did not return transaction data');
+          }
+          break;
+
+        default:
+          console.log(`[Swap] Unknown aggregator "${aggregator}", falling back to Mace`);
+          swapData = await adapters['Mace'].getSwapData({
+            tokenIn, tokenOut, amount,
+            slippage: parseFloat(slippage),
+            userAddress, recipient: recipient || userAddress
+          });
       }
-    } else if (aggregator === '0x' && adapters['0x']) {
-      // 0x returns transaction data in getQuote
-      const quote = await adapters['0x'].getQuote({
-        tokenIn,
-        tokenOut,
-        amount,
-        slippage: parseFloat(slippage),
-        userAddress
-      });
-      
-      if (quote.calldata && quote.to) {
-        swapData = {
-          success: true,
-          to: quote.to,
-          data: quote.calldata,
-          value: quote.value || '0',
-          estimatedGas: quote.estimatedGas || '300000',
-          allowanceTarget: quote.allowanceTarget
-        };
-      } else {
-        throw new Error('0x did not return transaction data');
-      }
-    } else if (aggregator === 'OKX' && adapters['OKX']) {
-      // OKX has dedicated getSwapData
-      swapData = await adapters['OKX'].getSwapData({
-        tokenIn,
-        tokenOut,
-        amount,
-        slippage: parseFloat(slippage),
-        userAddress
-      });
-      
-      if (!swapData.success) {
-        // Fall back to Mace if OKX fails
-        console.log(`[Swap] OKX failed, falling back to Mace`);
-        swapData = await adapters['Mace'].getSwapData({
-          tokenIn, tokenOut, amount,
-          slippage: parseFloat(slippage),
-          userAddress, recipient: recipient || userAddress
-        });
-      }
-    } else {
-      // Unknown aggregator or not available, fall back to Mace
-      console.log(`[Swap] Unknown aggregator "${aggregator}", falling back to Mace`);
+    } catch (adapterError) {
+      console.error(`[Swap] ${aggregator} failed:`, adapterError.message);
+      // Fall back to Mace if the selected aggregator fails
+      console.log(`[Swap] Falling back to Mace`);
       swapData = await adapters['Mace'].getSwapData({
         tokenIn, tokenOut, amount,
         slippage: parseFloat(slippage),
@@ -169,14 +194,12 @@ router.post('/swap', async (req, res) => {
 router.get('/swap/supported', (req, res) => {
   res.json({
     aggregators: [
-      { 
-        name: 'Mace', 
-        status: 'active', 
-        supportsNative: true,
-        supportsERC20: true,
-        chainId: 143 // Monad
-      }
-      // More aggregators can be added here as we implement them
+      { name: 'Mace', status: 'active' },
+      { name: 'Monorail', status: 'active' },
+      { name: '0x', status: 'active' },
+      { name: 'OKX', status: 'active' },
+      { name: 'OpenOcean', status: 'active' },
+      { name: 'KyberSwap', status: 'active' }
     ]
   });
 });

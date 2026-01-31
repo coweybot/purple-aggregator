@@ -10,6 +10,9 @@ export default class ZeroXAdapter {
     this.baseUrl = 'https://api.0x.org';
     this.chainId = 143; // Monad mainnet
     this.apiKey = process.env.ZEROX_API_KEY || '';
+    // 0x uses this address for native tokens
+    this.NATIVE_TOKEN = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+    this.WMON = '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A';
   }
 
   async getQuote({ tokenIn, tokenOut, amount, slippage = 0.5, userAddress }) {
@@ -17,11 +20,15 @@ export default class ZeroXAdapter {
       // Use a default taker address for price quotes (0x needs one)
       const taker = userAddress || '0x70a9f34f9b34c64957b9c401a97bfed35b95049e';
       
+      // Convert WMON to native token address for 0x (if user is swapping native MON)
+      const sellToken = tokenIn.toLowerCase() === this.WMON.toLowerCase() ? this.NATIVE_TOKEN : tokenIn;
+      const buyToken = tokenOut.toLowerCase() === this.WMON.toLowerCase() ? this.NATIVE_TOKEN : tokenOut;
+      
       const response = await axios.get(`${this.baseUrl}/swap/permit2/quote`, {
         params: {
           chainId: this.chainId,
-          sellToken: tokenIn,
-          buyToken: tokenOut,
+          sellToken: sellToken,
+          buyToken: buyToken,
           sellAmount: amount,
           taker: taker,
           slippageBps: Math.round(slippage * 100) // Convert 0.5% to 50 bps

@@ -2292,9 +2292,13 @@
             document.querySelectorAll('.connect-btn').forEach(btn => {
                 btn.textContent = 'Connect Wallet';
                 btn.classList.remove('connected');
+                btn.onclick = () => connectWallet(); // Reset to connect handler
             });
             const actionBtn = document.getElementById('actionBtn');
-            if (actionBtn) actionBtn.textContent = 'Connect Wallet';
+            if (actionBtn) {
+                actionBtn.textContent = 'Connect Wallet';
+                actionBtn.onclick = () => connectWallet();
+            }
             
             // Close wallet menu if open
             document.getElementById('walletMenu')?.remove();
